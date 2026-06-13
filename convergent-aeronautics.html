@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- CAS case study — grounded in Theodore, "A Summary of the NASA DELIVER Project" (2018) + the designer's consulting role -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Convergent Aeronautics Solutions · Matthew Garvin</title>
+<meta name="description" content="Case study: human-centered design consulting for NASA and DoD engineers advancing DELIVER — conceptual design for urban air mobility, drone delivery, and air taxis.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+:root { --accent: #5DD9FF; }
+
+/* ---------- shared viz panel ---------- */
+.viz {
+  margin: clamp(3rem, 7vw, 5rem) var(--pad);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: var(--bg-2);
+  overflow: hidden;
+}
+.viz__head {
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--hairline);
+}
+.viz__title { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+.viz__note { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); text-align: right; }
+.viz__body { padding: clamp(1.2rem, 3vw, 2.5rem); }
+
+/* ---------- concept space svg ---------- */
+.cspace { width: 100%; height: auto; display: block; }
+.cspace text { font-family: "IBM Plex Mono", monospace; }
+.cspace .axis { stroke: rgba(236,235,230,0.3); stroke-width: 1; }
+.cspace .axlbl { fill: #9b9a93; font-size: 8.5px; letter-spacing: 0.1em; }
+.cspace .zone { fill: rgba(93,217,255,0.06); stroke: rgba(93,217,255,0.45); stroke-dasharray: 6 4; }
+.cspace .zone--ok { fill: rgba(155,229,100,0.05); stroke: rgba(155,229,100,0.4); }
+.cspace .zlbl { font-size: 9px; letter-spacing: 0.12em; }
+.cspace .dot { fill: #5DD9FF; }
+.cspace .dot--conv { fill: rgba(155,229,100,0.8); }
+.cspace .vlbl { fill: #ecebe6; font-size: 9px; letter-spacing: 0.06em; }
+.cspace .vsub { fill: #9b9a93; font-size: 7.5px; letter-spacing: 0.04em; }
+
+/* ---------- ABCD flow ---------- */
+.utabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.3rem; }
+.utab {
+  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 0.55rem 1rem; border-radius: 999px;
+  background: transparent; color: var(--ink-dim);
+  border: 1px solid var(--hairline); cursor: pointer; transition: all 0.25s;
+}
+.utab:hover { color: var(--ink); }
+.utab.on { border-color: var(--accent); color: var(--accent); }
+.flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.flow__step {
+  border: 1px solid var(--hairline); border-radius: 6px;
+  background: rgba(8,8,14,0.5);
+  padding: 1rem 0.9rem 1.1rem;
+  position: relative;
+}
+.flow__step::after {
+  content: "→"; position: absolute; right: -13px; top: 50%; transform: translateY(-50%);
+  color: var(--accent); font-size: 0.9rem; z-index: 1;
+}
+.flow__step:last-child::after { display: none; }
+.flow__num { font-family: var(--font-mono); font-size: 0.6rem; color: var(--accent); letter-spacing: 0.12em; display: block; margin-bottom: 0.5rem; }
+.flow__step h3 { font-size: 0.92rem; font-weight: 600; margin: 0 0 0.4rem; color: var(--ink); }
+.flow__step p { font-size: 0.74rem; color: var(--ink-dim); margin: 0; line-height: 1.55; }
+@media (max-width: 900px) {
+  .flow { grid-template-columns: 1fr; }
+  .flow__step::after { content: "↓"; right: auto; left: 50%; top: auto; bottom: -16px; transform: translateX(-50%); }
+}
+
+/* ---------- hybrid trade study ---------- */
+.htsel { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.htbars { display: flex; flex-direction: column; gap: 16px; max-width: 640px; }
+.htbar { display: grid; grid-template-columns: 11rem 1fr 5.5rem; gap: 14px; align-items: center; }
+.htbar__label { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); text-align: right; }
+.htbar__track { height: 12px; border-radius: 999px; background: rgba(236,235,230,0.07); overflow: hidden; }
+.htbar__fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, rgba(93,217,255,0.45), #5DD9FF); transition: width 0.7s cubic-bezier(0.65,0,0.35,1); }
+.htbar__val { font-family: var(--font-mono); font-size: 0.66rem; color: var(--accent); }
+@media (max-width: 600px) { .htbar { grid-template-columns: 7rem 1fr 4rem; } }
+.htnote { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); margin-top: 1.1rem; display: block; }
+
+/* ---------- GL-10 / testing ---------- */
+.glgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--hairline); border: 1px solid var(--hairline); }
+.glgrid__cell { background: var(--bg); padding: 1.4rem 1.2rem; }
+.glgrid__num { display: block; font-size: clamp(1.7rem, 3.2vw, 2.5rem); font-weight: 600; line-height: 1; color: var(--accent); letter-spacing: -0.02em; }
+.glgrid__label { display: block; margin-top: 0.55rem; font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
+@media (max-width: 820px) { .glgrid { grid-template-columns: 1fr 1fr; } }
+.mounts { display: flex; flex-direction: column; gap: 12px; margin-top: 1.6rem; max-width: 640px; }
+.mount { display: grid; grid-template-columns: 11rem 1fr 6.5rem; gap: 14px; align-items: center; }
+.mount__label { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-dim); text-align: right; }
+.mount__track { height: 10px; border-radius: 999px; background: rgba(236,235,230,0.07); overflow: hidden; }
+.mount__fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, rgba(93,217,255,0.4), #5DD9FF); }
+.mount__val { font-family: var(--font-mono); font-size: 0.6rem; color: var(--ink-dim); }
+@media (max-width: 600px) { .mount { grid-template-columns: 7rem 1fr 5rem; } }
+
+/* noise stack chips */
+.nstack { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 1.2rem; }
+.nstack span { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; border: 1px solid var(--hairline); border-radius: 999px; padding: 0.45rem 0.85rem; color: var(--ink-dim); }
+.nstack .plus { border: none; color: var(--accent); padding: 0; }
+.nstack .eq { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body data-page="case">
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor" aria-hidden="true"></div>
+
+<header class="nav">
+  <a class="nav__logo" href="index.html">MG<sup>®</sup></a>
+  <nav class="nav__links" aria-label="Primary">
+    <a href="index.html#work">Work</a>
+    <a href="index.html#about">About</a>
+    <a href="index.html#contact">Contact</a>
+  </nav>
+  <div class="nav__meta mono">CASE STUDY — 04 / 07</div>
+</header>
+
+<main id="main">
+  <section class="case-hero">
+    <p class="case-hero__label mono">CONVERGENT AERONAUTICS SOLUTIONS · NASA ARMD · DELIVER PROJECT</p>
+    <h1 class="case-hero__title">
+      <span class="line"><span>Design the mission,</span></span>
+      <span class="line"><span>then the machine.</span></span>
+    </h1>
+    <p class="case-hero__sub">DELIVER — the Design Environment for Novel Vertical Lift Vehicles —
+    set out to prove that NASA's conceptual design tools could size the
+    coming generation of air taxis and delivery drones, with a radical
+    vision: a design environment usable by almost anyone, not just
+    aeronautics experts. I provided design consulting to NASA and DoD
+    engineers, coaching human-centered design to keep that vision — and the
+    near-future humans of urban air mobility — at the center of the work.</p>
+    <div class="case-meta">
+      <div class="case-meta__cell"><span class="k mono">ROLE</span><span class="v">Design Consultant — HCD coaching for NASA &amp; DoD engineers</span></div>
+      <div class="case-meta__cell"><span class="k mono">CONTEXT</span><span class="v">Urban air mobility · drone delivery &amp; air-taxi service · conceptual design tools</span></div>
+      <div class="case-meta__cell"><span class="k mono">METHODS</span><span class="v">HCD coaching, use-case framing, facilitation, trade-study reframing</span></div>
+      <div class="case-meta__cell"><span class="k mono">OUTCOME</span><span class="v">Mission-first design practice applied across DELIVER's vehicle, autonomy &amp; noise work</span></div>
+    </div>
+  </section>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The challenge</h2>
+      <div class="case-body">
+        <p>The UAM market was exploding in two directions at once: novel
+        vehicle configurations (Joby-style distributed electric air taxis,
+        delivery multicopters) and novel use cases (package delivery,
+        air-taxi service, inspection, search and rescue). But there was
+        <strong>no consistent way to go from a compelling use case to a
+        vehicle configured and sized for it</strong>. Validated design
+        tools existed only for conventional rotorcraft; startups were
+        burning time on build-test-iterate loops with no guarantee their
+        concept could ever close.</p>
+        <p class="pull">DELIVER's bet was that you could size a working air
+        taxi without an aeronautics degree — and that making the tools that
+        usable was worth coaching for. That coaching was my brief.</p>
+        <p>The engineers — NASA and DoD — had world-class analytical
+        instincts and technology-first habits. My job was to add one move:
+        start every analysis from the mission and the
+        humans in it, and treat "usable by almost anyone" as an actual
+        requirement.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONCEPT SPACE -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">The UAM Concept Space — Where Validated Tools Run Out</span>
+      <span class="viz__note">After the DELIVER vehicle survey (Theodore, 2018)</span>
+    </div>
+    <div class="viz__body" style="padding-bottom:1.6rem">
+      <svg class="cspace" viewBox="0 0 920 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Concept space map: conventional rotorcraft sit in a zone with validated design tools; novel air taxis and small delivery drones sit in a gap with no validated tools, which DELIVER targets">
+        <line class="axis" x1="70" y1="340" x2="880" y2="340"/>
+        <line class="axis" x1="70" y1="340" x2="70" y2="40"/>
+        <text class="axlbl" x="370" y="368">VEHICLE CLASS — sUAS → PASSENGER-CARRYING</text>
+        <text class="axlbl" x="30" y="200" transform="rotate(-90 30 200)" text-anchor="middle">DESIGN-TOOL MATURITY</text>
+
+        <rect class="zone zone--ok" x="640" y="60" width="230" height="120" rx="8"/>
+        <text class="zlbl" x="660" y="82" fill="#9BE564">VALIDATED FOR DECADES</text>
+        <circle class="dot dot--conv" cx="700" cy="120" r="6"/>
+        <text class="vlbl" x="712" y="118">CONVENTIONAL ROTORCRAFT</text>
+        <text class="vsub" x="712" y="132">single-main-rotor · tilt-rotor · tandem · coax (2–4+ pax)</text>
+        <text class="vsub" x="712" y="156">NDARC + CAMRAD II — empirical data, decades of use</text>
+
+        <rect class="zone" x="90" y="130" width="500" height="190" rx="8"/>
+        <text class="zlbl" x="110" y="154" fill="#5DD9FF">THE GAP — NO VALIDATED CONCEPTUAL DESIGN TOOLS · DELIVER'S TARGET</text>
+
+        <circle class="dot" cx="150" cy="270" r="6"/>
+        <text class="vlbl" x="162" y="266">DJI PHANTOM</text>
+        <text class="vsub" x="162" y="280">package-delivery-class sUAS</text>
+
+        <circle class="dot" cx="290" cy="240" r="6"/>
+        <text class="vlbl" x="302" y="236">SUI ENDURANCE</text>
+        <text class="vsub" x="302" y="250">quadcopter · wind tunnel + flight tested</text>
+
+        <circle class="dot" cx="420" cy="205" r="6"/>
+        <text class="vlbl" x="432" y="201">GL-10 GREASED LIGHTNING</text>
+        <text class="vsub" x="432" y="215">NASA distributed-electric tilt-wing demonstrator</text>
+
+        <circle class="dot" cx="510" cy="175" r="6"/>
+        <text class="vlbl" x="522" y="171">JOBY S2-LIKE AIR TAXI</text>
+        <text class="vsub" x="522" y="185">distributed electric propulsion · 150 NMI design range</text>
+      </svg>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>Coaching mission-first design</h2>
+      <div class="case-body">
+        <p>The deepest HCD foothold in DELIVER was autonomy. You can't size
+        a vehicle without knowing the weight, volume, and power of its
+        autonomy equipment — and you can't know that without designing the
+        <strong>mission</strong> first. DELIVER's Application-Based
+        Conceptual Design (ABCD) prototype made this concrete: define the
+        use case, derive the autonomy system across three bins (mission
+        systems, concept of operations, regulatory requirements), then feed
+        it into NDARC's sizing as real equipage.</p>
+        <p>In working sessions, I coached engineers to run that logic the
+        way designers do — personas for operators and bystanders, scenario
+        walk-throughs before equipment lists, "who hears this vehicle and
+        who trusts it" alongside "does the configuration close." The use
+        cases below are the kind we worked through.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABCD FLOW -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">Application-Based Conceptual Design — Use Case to Vehicle</span>
+      <span class="viz__note">Select a use case · S&amp;R requirements per the paper</span>
+    </div>
+    <div class="viz__body">
+      <div class="utabs" role="tablist" aria-label="Use cases">
+        <button class="utab on" data-uc="sar" type="button">Search &amp; rescue</button>
+        <button class="utab" data-uc="delivery" type="button">Package delivery</button>
+        <button class="utab" data-uc="taxi" type="button">Air taxi</button>
+      </div>
+      <div class="flow" id="ucflow"></div>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>Designing for noise</h2>
+      <div class="case-body">
+        <p>Noise is the single largest limiter on urban rotorcraft
+        operations — and the assumption that small electric drones are
+        "quiet" collapses once they operate close to people, in numbers.
+        DELIVER's acoustics work was human-centered research in the
+        strictest sense: free-flight measurements showed multicopter noise
+        is a complex, constantly shifting sum of props at different speeds,
+        and the team built <strong>auralizations for human-subject
+        annoyance testing</strong> — playing recorded flyovers to listeners and
+        measuring how much the sound actually bothered them, in decibels and in
+        judgments.</p>
+        <div class="nstack" aria-label="Noise prediction stack">
+          <span>OVERFLOW CFD — BLADE PRESSURES</span><span class="plus">+</span>
+          <span>PSU-WOPWOP — HARMONICS</span><span class="plus">+</span>
+          <span>BARC — BROADBAND</span><span class="plus">+</span>
+          <span>MEASURED MOTOR NOISE</span><span class="plus">=</span>
+          <span class="eq">FULL-VEHICLE PREDICTION vs ANECHOIC TEST</span>
+        </div>
+        <p style="margin-top:1.5rem">The coaching angle: a noise target is a
+        <strong>community-acceptance requirement</strong>. Annoyance belongs
+        in the conceptual design loop next to range and payload, because
+        noise complaints will shrink where these vehicles are allowed to
+        fly.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- HYBRID TRADE -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">Trade Study — Propulsion Options for a Joby S2-like Air Taxi</span>
+      <span class="viz__note">Missions = 50-NMI UAM flights between recharge/refuel · per Table 2</span>
+    </div>
+    <div class="viz__body">
+      <div class="htsel" role="tablist" aria-label="Propulsion options">
+        <button class="utab on" data-ht="0" type="button">All-electric baseline</button>
+        <button class="utab" data-ht="1" type="button">Hybrid 150 HP</button>
+        <button class="utab" data-ht="2" type="button">Hybrid 175 HP</button>
+        <button class="utab" data-ht="3" type="button">Hybrid 200 HP · cryo-cooled</button>
+      </div>
+      <div class="htbars">
+        <div class="htbar"><span class="htbar__label">Range</span><div class="htbar__track"><div class="htbar__fill" id="ht-range"></div></div><span class="htbar__val" id="ht-range-v"></span></div>
+        <div class="htbar"><span class="htbar__label">50-NMI UAM missions</span><div class="htbar__track"><div class="htbar__fill" id="ht-miss"></div></div><span class="htbar__val" id="ht-miss-v"></span></div>
+      </div>
+      <span class="htnote" id="htnote"></span>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>Grounded in real flight test</h2>
+      <div class="case-body">
+        <p>DELIVER wasn't a paper exercise — models were calibrated against
+        isolated-prop rigs, wind tunnels, anechoic chambers, and flight
+        campaigns. The rebuilt GL-10 distributed-electric tilt-wing flew a
+        dedicated research campaign in June 2017:</p>
+        <div class="glgrid" style="margin-top:1.5rem">
+          <div class="glgrid__cell"><span class="glgrid__num">22</span><span class="glgrid__label">FLIGHTS IN THE GL-10 CAMPAIGN</span></div>
+          <div class="glgrid__cell"><span class="glgrid__num">12</span><span class="glgrid__label">FULL TRANSITIONS — VTOL ↔ AIRPLANE MODE</span></div>
+          <div class="glgrid__cell"><span class="glgrid__num">7.2</span><span class="glgrid__label">L/D MAX IN FLIGHT (VS 6.5 IN WIND TUNNEL)</span></div>
+          <div class="glgrid__cell"><span class="glgrid__num">5°</span><span class="glgrid__label">ANGLE OF ATTACK AT L/D MAX · 45 KT</span></div>
+        </div>
+        <p style="margin-top:1.8rem">High-fidelity CFD also proved worth
+        running at the concept stage. An OVERFLOW study of prop mounting on
+        a Phantom-like quad caught configuration effects that no rule of
+        thumb would:</p>
+        <div class="mounts">
+          <div class="mount"><span class="mount__label">Over-mount (baseline)</span><div class="mount__track"><div class="mount__fill" style="width:95%"></div></div><span class="mount__val">−5.1% NET THRUST*</span></div>
+          <div class="mount"><span class="mount__label">Under-mount</span><div class="mount__track"><div class="mount__fill" style="width:90%"></div></div><span class="mount__val">WORSE*</span></div>
+          <div class="mount"><span class="mount__label">Off-body under-mount</span><div class="mount__track"><div class="mount__fill" style="width:86%"></div></div><span class="mount__val">WORST*</span></div>
+        </div>
+        <p class="htnote" style="margin-top:0.9rem">* VS FOUR ISOLATED PROPS — PROP–PROP AND PROP–BODY INTERACTIONS. OVER-MOUNT GAINS +2.5% PROP THRUST FROM PSEUDO GROUND EFFECT, LOSES 7.6% TO BODY DOWNLOAD. RELATIVE BAR LENGTHS FOR UNDER-MOUNT CASES ILLUSTRATIVE.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The outcome</h2>
+      <div class="case-body">
+        <div class="outcomes">
+          <div class="outcome"><span class="outcome__num">3</span><span class="outcome__label mono">TRANSFORMATIVE TECHS IN THE DESIGN LOOP — NOISE · AUTONOMY · ELECTRIC</span></div>
+          <div class="outcome"><span class="outcome__num">2→7</span><span class="outcome__label mono">UAM MISSIONS PER CHARGE/REFUEL ACROSS THE TRADE SPACE</span></div>
+          <div class="outcome"><span class="outcome__num">22</span><span class="outcome__label mono">GL-10 RESEARCH FLIGHTS CALIBRATING THE TOOLS</span></div>
+        </div>
+        <p style="margin-top:2rem">DELIVER demonstrated that NASA's
+        conceptual design tools extend into the UAM concept space — and
+        mapped exactly where they don't — while pulling noise, autonomy,
+        and electrification into the earliest design conversations. The
+        consulting contribution lives in how those conversations ran:
+        starting from use cases, naming the people affected, and treating
+        community acceptance as a hard constraint.</p>
+        <p>The engineers kept what earned its place in a trade study and
+        dropped what didn't. So I never pitched human-centered design as a
+        virtue. I pointed to where it tightened their numbers and let the
+        trade studies settle it.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="case-next">
+    <span class="k mono">NEXT CASE STUDY — 05 / 07</span>
+    <a class="case-next__link" href="bliss.html">BLiSS — "Hey Diego" →</a>
+  </section>
+</main>
+
+<p class="case-disclaimer mono">CONTENT BASED ON THEODORE, "A SUMMARY OF THE NASA DELIVER PROJECT" (2018), AND THE AUTHOR'S CONSULTING ROLE. CONCEPT-SPACE POSITIONS AND UNMARKED BAR LENGTHS ARE ILLUSTRATIVE; FIGURES MARKED FROM THE PAPER ARE AS PUBLISHED.</p>
+
+<footer class="footer">
+  <p class="mono">© 2026 MATTHEW GARVIN · <a href="https://vinsettastudio.com/" target="_blank" rel="noopener">DESIGNED BY VINSETTA STUDIO LLC</a></p>
+  <div class="footer__links mono">
+    <a href="https://www.linkedin.com/in/matthew-garvin-7260724a/" target="_blank" rel="noopener">LINKEDIN</a>
+    <a href="https://github.com/mtthwgrvn" target="_blank" rel="noopener">GITHUB</a>
+    <a href="https://mtthwx.com" target="_blank" rel="noopener">BLOG</a>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="js/main.js"></script>
+<script>
+(function () {
+  /* ---------- ABCD use-case flow ---------- */
+  var cases = {
+    sar: [
+      { k: 'USE CASE', h: 'Find a lost hiker', p: 'Search a forest beyond ground-control range; deliver emergency supplies; guide rescuers to the spot.' },
+      { k: 'MISSION SYSTEMS', h: 'Sense, map, detect', p: 'On-board search algorithm; generate maps in flight and merge across vehicles; detect and track a human with on-board sensors.' },
+      { k: 'CONOPS + REGULATORY', h: 'Fly where GPS fails', p: 'Reliable flight under tree canopy with obstacle avoidance; coordinate with other vehicles; lost-link and contingency behavior.' },
+      { k: 'NDARC SIZING', h: 'Equipage → vehicle', p: 'Autonomy equipment weight, volume, and power become design constraints — the vehicle is sized around the mission, not vice versa.' }
+    ],
+    delivery: [
+      { k: 'USE CASE', h: 'Deliver a package', p: 'Carry a parcel across a city and place it at a doorstep — next to people, pets, and parked cars.' },
+      { k: 'MISSION SYSTEMS', h: 'Find the doorstep', p: 'Sensors and processing to detect the landing point and navigate to it while avoiding obstacles in the landing zone.' },
+      { k: 'CONOPS + REGULATORY', h: 'Operate over people', p: 'Day/night and weather envelope; UTM/FAA equipage, ADS-B, see-and-avoid; noise low enough that neighborhoods accept the service.' },
+      { k: 'NDARC SIZING', h: 'Close the design', p: 'Payload, autonomy equipage, and acoustic limits sized together — if the autonomy hardware is too heavy, there’s no margin left for the parcel.' }
+    ],
+    taxi: [
+      { k: 'USE CASE', h: 'Fly a paying passenger', p: 'A 50-NMI urban hop, no pilot on board — removing the pilot adds a paying seat and cuts operating cost.' },
+      { k: 'MISSION SYSTEMS', h: 'Earn the passenger’s trust', p: 'Autonomous flight management plus the cabin experience — the design has to work for a nervous first-time rider.' },
+      { k: 'CONOPS + REGULATORY', h: 'Fit into the city', p: 'Integration with airspace and other vehicles; redundancy and contingency management; community noise acceptance along routes.' },
+      { k: 'NDARC SIZING', h: 'Size the vehicle', p: 'Distributed electric propulsion sized against range, missions-per-charge, and autonomy equipage — see the trade study below.' }
+    ]
+  };
+  var ucflow = document.getElementById('ucflow');
+  function ucRender(key) {
+    ucflow.innerHTML = cases[key].map(function (s, i) {
+      return '<div class="flow__step"><span class="flow__num">0' + (i + 1) + ' — ' + s.k + '</span><h3>' + s.h + '</h3><p>' + s.p + '</p></div>';
+    }).join('');
+  }
+  document.querySelectorAll('.utab[data-uc]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.utab[data-uc]').forEach(function (b) { b.classList.remove('on'); });
+      btn.classList.add('on');
+      ucRender(btn.getAttribute('data-uc'));
+    });
+  });
+  ucRender('sar');
+
+  /* ---------- hybrid trade study ---------- */
+  var options = [
+    { rangeW: 38, rangeV: '150 NMI (DESIGN)', missW: 22, missV: '2', note: 'BASELINE — ALL-ELECTRIC. BATTERIES RECHARGE BETWEEN MISSIONS.' },
+    { rangeW: 60, rangeV: 'EXTENDED*', missW: 50, missV: '4–5*', note: 'RANGE LIMITED BY BATTERY ENERGY — GENERATOR TOO SMALL TO CHARGE IN CRUISE. MISSIONS MORE THAN DOUBLED.' },
+    { rangeW: 72, rangeV: 'EXTENDED*', missW: 60, missV: '5–6*', note: 'RANGE STILL BATTERY-LIMITED AT 175 HP. MISSIONS MORE THAN DOUBLED VS BASELINE.' },
+    { rangeW: 100, rangeV: 'MAXIMUM', missW: 78, missV: '7', note: 'CRYO-COOLED 200 HP — MAXIMUM RANGE AND 7 MISSIONS BETWEEN REFUELING. (* INTERMEDIATE VALUES APPROXIMATE; BASELINE AND MAXIMUM PER THE PAPER.)' }
+  ];
+  function htRender(i) {
+    var o = options[i];
+    document.getElementById('ht-range').style.width = o.rangeW + '%';
+    document.getElementById('ht-range-v').textContent = o.rangeV;
+    document.getElementById('ht-miss').style.width = o.missW + '%';
+    document.getElementById('ht-miss-v').textContent = o.missV;
+    document.getElementById('htnote').textContent = o.note;
+    document.querySelectorAll('.utab[data-ht]').forEach(function (b, j) { b.classList.toggle('on', j === i); });
+  }
+  document.querySelectorAll('.utab[data-ht]').forEach(function (btn, i) {
+    btn.addEventListener('click', function () { htRender(i); });
+  });
+  htRender(0);
+
+  /* ---------- reveals ---------- */
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduced && typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+    document.querySelectorAll('.viz, .flow__step, .glgrid__cell, .mount, .nstack span').forEach(function (el) {
+      gsap.from(el, {
+        opacity: 0, y: 24, duration: 0.7, ease: 'power3.out',
+        scrollTrigger: { trigger: el, start: 'top 92%' }
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>

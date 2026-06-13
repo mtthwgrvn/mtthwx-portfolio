@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- Social Innovations case study — rebuilt from Dillahunt, Garvin, Held & Hui, CSCW 2021 (DOI 10.1145/3476065) -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Social Innovations Lab · Matthew Garvin</title>
+<meta name="description" content="Case study: lessons from employment centers for designing inclusive employment support tools — CSCW 2021 research at the University of Michigan.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+:root { --accent: #B58CFF; }
+
+/* ---------- shared viz panel ---------- */
+.viz {
+  margin: clamp(3rem, 7vw, 5rem) var(--pad);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: var(--bg-2);
+  overflow: hidden;
+}
+.viz__head {
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--hairline);
+}
+.viz__title { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+.viz__note { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); text-align: right; }
+.viz__body { padding: clamp(1.2rem, 3vw, 2.5rem); }
+
+/* ---------- PWT model svg (after Duffy et al., 2016, Fig. 1) ---------- */
+.pwt { width: 100%; height: auto; display: block; }
+.pwt text { font-family: "IBM Plex Mono", monospace; }
+.pwt .node { fill: rgba(8,8,14,0.65); stroke: rgba(236,235,230,0.4); stroke-width: 1.2; }
+.pwt .node--new { stroke: #B58CFF; stroke-width: 1.6; }
+.pwt .nlbl { fill: #ecebe6; font-size: 10px; letter-spacing: 0.06em; text-anchor: middle; }
+.pwt .sec { fill: #ecebe6; font-size: 11px; letter-spacing: 0.18em; text-anchor: middle; text-decoration: underline; }
+.pwt .sub { fill: #9b9a93; font-size: 8px; letter-spacing: 0.05em; }
+.pwt .num { fill: #9b9a93; font-size: 8.5px; }
+.pwt .ln { fill: none; stroke: rgba(236,235,230,0.75); stroke-width: 1.2; }
+.pwt .lnd { fill: none; stroke: rgba(236,235,230,0.45); stroke-width: 1.1; stroke-dasharray: 5 4; }
+.pwt .lna { fill: none; stroke: #B58CFF; stroke-width: 1.2; stroke-dasharray: 5 4; animation: pwtwire 1.6s linear infinite; }
+.pwt .modbox { fill: rgba(181,140,255,0.06); stroke: #B58CFF; stroke-width: 1.2; }
+.pwt .modtxt { fill: #ecebe6; font-size: 9px; letter-spacing: 0.06em; }
+.pwt .modtxt--dim { fill: #9b9a93; }
+.pwt .modtxt--new { fill: #B58CFF; }
+@keyframes pwtwire { to { stroke-dashoffset: -9; } }
+@media (prefers-reduced-motion: reduce) { .pwt .lna { animation: none; } }
+.pwt-scroll { overflow-x: auto; }
+.pwt-scroll .pwt { min-width: 760px; }
+
+/* ---------- study stats ---------- */
+.stato { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--hairline); border: 1px solid var(--hairline); }
+.stato__cell { background: var(--bg); padding: 1.5rem 1.3rem; }
+.stato__num { display: block; font-size: clamp(1.9rem, 3.6vw, 2.8rem); font-weight: 600; line-height: 1; color: var(--accent); letter-spacing: -0.02em; }
+.stato__label { display: block; margin-top: 0.6rem; font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
+@media (max-width: 700px) { .stato { grid-template-columns: 1fr 1fr; } }
+.splitbar { margin-top: 1.4rem; }
+.splitbar__track { display: flex; height: 26px; border-radius: 6px; overflow: hidden; border: 1px solid var(--hairline); }
+.splitbar__seg { display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; color: var(--bg); font-weight: 500; }
+.splitbar__seg--ca { background: #B58CFF; width: 52.4%; }
+.splitbar__seg--bsc { background: rgba(181,140,255,0.45); width: 47.6%; color: var(--ink); }
+.splitbar__legend { display: flex; justify-content: space-between; margin-top: 0.5rem; font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
+
+/* ---------- two-sided service map ---------- */
+.sides { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 820px) { .sides { grid-template-columns: 1fr; } }
+.side { border: 1px solid var(--hairline); border-radius: 6px; background: rgba(8,8,14,0.5); padding: 1.3rem; }
+.side__role { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 0.2rem; }
+.side__who { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); display: block; margin-bottom: 1rem; }
+.side ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.side li { padding: 0.75rem 0; border-top: 1px solid var(--hairline); font-size: 0.88rem; color: var(--ink-dim); line-height: 1.5; }
+.side li b { color: var(--ink); font-weight: 600; display: block; font-size: 0.92rem; margin-bottom: 0.15rem; }
+
+/* ---------- moderator explorer ---------- */
+.modtabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.4rem; }
+.modtab {
+  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 0.55rem 1rem; border-radius: 999px;
+  background: transparent; color: var(--ink-dim);
+  border: 1px solid var(--hairline); cursor: pointer;
+  transition: all 0.25s;
+}
+.modtab:hover { color: var(--ink); }
+.modtab.on { border-color: var(--accent); color: var(--accent); }
+.modtab--new.on, .modtab--new { border-style: dashed; }
+.modpanel { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 820px) { .modpanel { grid-template-columns: 1fr; } }
+.modcard { border: 1px solid var(--hairline); border-radius: 6px; background: rgba(8,8,14,0.5); padding: 1.3rem; min-height: 190px; }
+.modcard__k { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-dim); display: block; margin-bottom: 0.7rem; }
+.modcard__k.alt { color: var(--accent); }
+.modcard p { font-size: 0.9rem; color: var(--ink-dim); margin: 0 0 0.8rem; line-height: 1.6; }
+.modcard p b { color: var(--ink); }
+.modquote { border-left: 3px solid var(--accent); padding: 0.3rem 0 0.3rem 1rem; font-size: 0.86rem; color: var(--ink); font-style: italic; margin-top: 0.4rem; }
+.modquote span { display: block; font-style: normal; font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.1em; color: var(--ink-dim); margin-top: 0.4rem; }
+.modbadge { display: inline-block; font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.14em; color: var(--bg); background: var(--accent); border-radius: 999px; padding: 0.25rem 0.6rem; margin-left: 0.5rem; vertical-align: middle; }
+</style>
+</head>
+<body data-page="case">
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor" aria-hidden="true"></div>
+
+<header class="nav">
+  <a class="nav__logo" href="index.html">MG<sup>®</sup></a>
+  <nav class="nav__links" aria-label="Primary">
+    <a href="index.html#work">Work</a>
+    <a href="index.html#about">About</a>
+    <a href="index.html#contact">Contact</a>
+  </nav>
+  <div class="nav__meta mono">CASE STUDY — 06 / 07</div>
+</header>
+
+<main id="main">
+  <section class="case-hero">
+    <p class="case-hero__label mono">SOCIAL INNOVATIONS LAB · UNIVERSITY OF MICHIGAN · CSCW 2021</p>
+    <h1 class="case-hero__title">
+      <span class="line"><span>What job platforms</span></span>
+      <span class="line"><span>don't see.</span></span>
+    </h1>
+    <p class="case-hero__sub">Job platforms match résumés to openings. But for marginalized job
+    seekers, the real obstacles — housing, transportation, criminal records,
+    stigma — sit outside the matching engine. We interviewed 21 employment-center
+    staff to learn what decades of human practice can teach the design of
+    employment support tools. Published at CSCW 2021 with Tawanna Dillahunt.</p>
+    <div class="case-meta">
+      <div class="case-meta__cell"><span class="k mono">ROLE</span><span class="v">Design Researcher · co-author</span></div>
+      <div class="case-meta__cell"><span class="k mono">TEAM</span><span class="v">w/ Tawanna Dillahunt, Marcy Held, Julie Hui · Social Innovations Group</span></div>
+      <div class="case-meta__cell"><span class="k mono">METHODS</span><span class="v">21 semi-structured interviews, open + provisional coding, member checking, Psychology of Working Theory</span></div>
+      <div class="case-meta__cell"><span class="k mono">OUTCOME</span><span class="v">Proc. ACM HCI (CSCW 2021), Art. 324 · design framework · new theoretical moderator</span></div>
+    </div>
+  </section>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The challenge</h2>
+      <div class="case-body">
+        <p>Technological change is expected to limit decent work for millions,
+        and the brunt falls on socially and economically marginalized job
+        seekers — people already pushed into lower-wage, precarious work.
+        HCI and CSCW had studied these job seekers and built tools for them.
+        But one perspective was missing from the literature entirely: the
+        <strong>employment centers</strong> that successfully serve up to 15
+        million job seekers a year.</p>
+        <p class="pull">Before designing tools for marginalized job seekers,
+        we wanted to learn from the people who already help them find
+        work.</p>
+        <p>We partnered with a non-profit in the American Job Center network —
+        three local centers serving more than 2,500 employers annually, where
+        roughly 70% of job seekers served were experiencing marginalization —
+        and interviewed the staff who do this work every day.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STUDY AT A GLANCE -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">The Study at a Glance</span>
+      <span class="viz__note">Semi-structured interviews · IRB approved · member checked</span>
+    </div>
+    <div class="viz__body">
+      <div class="stato">
+        <div class="stato__cell"><span class="stato__num" data-count="21">21</span><span class="stato__label">EMPLOYMENT-CENTER STAFF INTERVIEWED</span></div>
+        <div class="stato__cell"><span class="stato__num" data-count="50">50</span><span class="stato__label">MINUTES AVG. INTERVIEW (SD = 15)</span></div>
+        <div class="stato__cell"><span class="stato__num" data-count="3">3</span><span class="stato__label">JOB CENTERS · AMERICAN JOB CENTER NETWORK</span></div>
+        <div class="stato__cell"><span class="stato__num">2.5K+</span><span class="stato__label">EMPLOYERS SERVED BY PARTNER ORG ANNUALLY</span></div>
+      </div>
+      <div class="splitbar">
+        <div class="splitbar__track">
+          <div class="splitbar__seg splitbar__seg--ca">11 CAREER ADVISORS</div>
+          <div class="splitbar__seg splitbar__seg--bsc">10 BUSINESS SERVICES COORDINATORS</div>
+        </div>
+        <div class="splitbar__legend"><span>WORK WITH JOB SEEKERS</span><span>WORK WITH EMPLOYERS</span></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The theory</h2>
+      <div class="case-body">
+        <p>We framed the study with the <strong>Psychology of Working
+        Theory</strong> — the only career theory that takes seriously the
+        situation of people with little or no choice in their work. PWT
+        models how marginalization and economic constraints predict whether
+        someone secures decent work, and names the moderators that can
+        buffer that effect.</p>
+        <p>Most CSCW employment tools target personal factors within the job
+        seeker's control. We asked instead how employment centers work the
+        <strong>contextual</strong> moderators — and whether those practices
+        could be designed into tools.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PWT MODEL -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">Psychology of Working Theory — As Operationalized in Our Study</span>
+      <span class="viz__note">Abridged model · Duffy et&nbsp;al. 2016 + our contribution</span>
+    </div>
+    <div class="viz__body pwt-scroll" style="padding-bottom:1.6rem">
+      <svg class="pwt" viewBox="0 0 980 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Recreation of the Psychology of Working Theory model: economic constraints and marginalization predict work volition and career adaptability, which predict decent work, which fulfills survival, social connection, and self-determination needs, leading to work fulfillment and well-being. Moderators including proactive personality, critical consciousness, social support, economic conditions, and the newly proposed feelings of stigma buffer the predictor paths.">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="rgba(236,235,230,0.75)"/></marker>
+          <marker id="ahd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="rgba(236,235,230,0.45)"/></marker>
+          <marker id="aha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#B58CFF"/></marker>
+        </defs>
+
+        <text class="sec" x="220" y="28">PREDICTORS</text>
+        <text class="sec" x="760" y="28">OUTCOMES</text>
+
+        <!-- predictor nodes -->
+        <ellipse class="node" cx="120" cy="135" rx="64" ry="42"/>
+        <text class="nlbl" x="120" y="130">ECONOMIC</text>
+        <text class="nlbl" x="120" y="144">CONSTRAINTS</text>
+        <ellipse class="node" cx="120" cy="320" rx="64" ry="42"/>
+        <text class="nlbl" x="120" y="324">MARGINALIZATION</text>
+
+        <!-- volition / adaptability -->
+        <ellipse class="node" cx="320" cy="135" rx="58" ry="40"/>
+        <text class="nlbl" x="320" y="130">WORK</text>
+        <text class="nlbl" x="320" y="144">VOLITION</text>
+        <ellipse class="node" cx="320" cy="320" rx="60" ry="42"/>
+        <text class="nlbl" x="320" y="315">CAREER</text>
+        <text class="nlbl" x="320" y="329">ADAPTABILITY</text>
+
+        <!-- decent work -->
+        <ellipse class="node" cx="505" cy="228" rx="54" ry="42"/>
+        <text class="nlbl" x="505" y="223">DECENT</text>
+        <text class="nlbl" x="505" y="237">WORK</text>
+
+        <!-- needs -->
+        <ellipse class="node" cx="700" cy="100" rx="58" ry="38"/>
+        <text class="nlbl" x="700" y="95">SURVIVAL</text>
+        <text class="nlbl" x="700" y="109">NEEDS</text>
+        <ellipse class="node" cx="700" cy="228" rx="60" ry="42"/>
+        <text class="nlbl" x="700" y="216">SOCIAL</text>
+        <text class="nlbl" x="700" y="230">CONNECTION</text>
+        <text class="nlbl" x="700" y="244">NEEDS</text>
+        <ellipse class="node" cx="700" cy="360" rx="62" ry="42"/>
+        <text class="nlbl" x="700" y="348">SELF-</text>
+        <text class="nlbl" x="700" y="362">DETERMINATION</text>
+        <text class="nlbl" x="700" y="376">NEEDS</text>
+
+        <!-- fulfillment / well-being -->
+        <ellipse class="node" cx="895" cy="165" rx="56" ry="40"/>
+        <text class="nlbl" x="895" y="160">WORK</text>
+        <text class="nlbl" x="895" y="174">FULFILLMENT</text>
+        <ellipse class="node" cx="895" cy="300" rx="52" ry="38"/>
+        <text class="nlbl" x="895" y="304">WELL-BEING</text>
+
+        <!-- 1: EC <-> MARG -->
+        <path class="ln" d="M85 173 C 55 215, 55 240, 85 282" marker-start="url(#ah)" marker-end="url(#ah)"/>
+        <text class="num" x="46" y="232">1</text>
+
+        <!-- 7: EC -> WV, 10: EC -> CA, 6: MARG -> WV, 9: MARG -> CA -->
+        <path class="ln" d="M184 135 L 262 135" marker-end="url(#ah)"/><text class="num" x="216" y="126">7</text>
+        <path class="ln" d="M172 165 L 272 290" marker-end="url(#ah)"/><text class="num" x="204" y="206">10</text>
+        <path class="ln" d="M172 290 L 272 166" marker-end="url(#ah)"/><text class="num" x="204" y="278">6</text>
+        <path class="ln" d="M184 320 L 260 320" marker-end="url(#ah)"/><text class="num" x="216" y="311">9</text>
+
+        <!-- 4: WV <-> CA -->
+        <path class="ln" d="M320 175 L 320 278" marker-start="url(#ah)" marker-end="url(#ah)"/>
+        <text class="num" x="328" y="230">4</text>
+
+        <!-- 5: WV -> DW, 8: CA -> DW (dashed) -->
+        <path class="lnd" d="M372 156 L 458 200" marker-end="url(#ahd)"/><text class="num" x="408" y="168">5</text>
+        <path class="lnd" d="M374 298 L 458 254" marker-end="url(#ahd)"/><text class="num" x="408" y="292">8</text>
+
+        <!-- 3: EC -> DW over top (dashed), 2: MARG -> DW under bottom (dashed) -->
+        <path class="lnd" d="M120 93 C 130 44, 460 44, 500 184" marker-end="url(#ahd)"/><text class="num" x="305" y="52">3</text>
+        <path class="lnd" d="M120 362 C 130 420, 470 420, 504 272" marker-end="url(#ahd)"/><text class="num" x="305" y="424">2</text>
+
+        <!-- 23,24,25: DW -> needs (dashed) -->
+        <path class="lnd" d="M550 202 L 646 122" marker-end="url(#ahd)"/><text class="num" x="592" y="156">23</text>
+        <path class="lnd" d="M559 228 L 638 228" marker-end="url(#ahd)"/><text class="num" x="592" y="219">24</text>
+        <path class="lnd" d="M550 254 L 644 336" marker-end="url(#ahd)"/><text class="num" x="592" y="306">25</text>
+
+        <!-- 26-31: needs -> fulfillment / well-being (solid) -->
+        <path class="ln" d="M754 116 L 844 146" marker-end="url(#ah)"/><text class="num" x="796" y="122">26</text>
+        <path class="ln" d="M752 124 L 850 277 " marker-end="url(#ah)"/><text class="num" x="812" y="206">29</text>
+        <path class="ln" d="M757 210 L 842 180" marker-end="url(#ah)"/><text class="num" x="796" y="186">27</text>
+        <path class="ln" d="M758 246 L 846 286" marker-end="url(#ah)"/><text class="num" x="796" y="276">30</text>
+        <path class="ln" d="M754 336 L 852 192" marker-end="url(#ah)"/><text class="num" x="812" y="262">28</text>
+        <path class="ln" d="M758 344 L 846 314" marker-end="url(#ah)"/><text class="num" x="800" y="338">31</text>
+
+        <!-- 32: WF <-> WB -->
+        <path class="ln" d="M895 205 L 895 262" marker-start="url(#ah)" marker-end="url(#ah)"/>
+        <text class="num" x="903" y="238">32</text>
+
+        <!-- moderators box -->
+        <rect class="modbox" x="150" y="445" width="340" height="140" rx="6"/>
+        <text class="sec" x="320" y="468" font-size="10">MODERATORS</text>
+        <text class="modtxt" x="170" y="490">• PROACTIVE PERSONALITY</text>
+        <text class="modtxt modtxt--dim" x="170" y="508">• CRITICAL CONSCIOUSNESS*</text>
+        <text class="modtxt" x="170" y="526">• SOCIAL SUPPORT</text>
+        <text class="modtxt" x="170" y="544">• ECONOMIC CONDITIONS</text>
+        <text class="modtxt modtxt--new" x="170" y="568">★ FEELINGS OF STIGMA — PROPOSED BY THIS STUDY</text>
+
+        <!-- moderator buffer arrows (dashed, to predictor paths) -->
+        <path class="lna" d="M205 445 C 200 410, 205 380, 213 348" marker-end="url(#aha)"/>
+        <path class="lna" d="M240 445 C 238 390, 230 290, 222 232" marker-end="url(#aha)"/>
+        <path class="lna" d="M275 445 C 275 380, 250 220, 222 152" marker-end="url(#aha)"/>
+        <path class="lna" d="M310 445 C 320 410, 350 400, 392 388" marker-end="url(#aha)"/>
+        <path class="lna" d="M345 447 C 400 410, 420 330, 442 262" marker-end="url(#aha)"/>
+
+        <!-- legend -->
+        <line class="ln" x1="560" y1="480" x2="610" y2="480"/>
+        <text class="sub" x="620" y="484">THEORETICALLY AND EMPIRICALLY SUPPORTED</text>
+        <line class="lnd" x1="560" y1="504" x2="610" y2="504"/>
+        <text class="sub" x="620" y="508">THEORETICALLY SUPPORTED</text>
+        <line class="lna" x1="560" y1="528" x2="610" y2="528"/>
+        <text class="sub" x="620" y="532">MODERATOR BUFFER — WHERE EMPLOYMENT CENTERS (AND DESIGN) INTERVENE</text>
+        <text class="sub" x="560" y="556">* NOT OBSERVED IN EMPLOYMENT-CENTER PRACTICE — IDENTIFIED AS A DESIGN OPPORTUNITY</text>
+        <text class="sub" x="560" y="574">AFTER DUFFY, BLUSTEIN, DIEMER &amp; AUTIN (2016), FIG. 1 — ABRIDGED PATHS AS ANALYZED IN OUR STUDY</text>
+      </svg>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>What we found</h2>
+      <div class="case-body">
+        <p>Career advisors and business services coordinators perform
+        <strong>significant work far beyond matching</strong> — the function
+        most employment tools optimize. The two most common barriers were
+        housing insecurity and transportation, surfaced through intake
+        checklists and informational interviewing. From there, the center
+        works both sides of the market at once:</p>
+        <div class="sides" style="margin-top:1.6rem">
+          <div class="side">
+            <span class="side__role">Career Advisors</span>
+            <span class="side__who">Working the job-seeker side</span>
+            <ul>
+              <li><b>Connect to external resources</b>Housing programs, paying for rides until the first paycheck, car repairs — even alliances with courts for record expungement.</li>
+              <li><b>Provide encouragement that networks can't</b>Filling gaps in social support to keep people applying through rejection.</li>
+              <li><b>Turn crisis into strategy</b>From "the house is on fire" to long-term goals: O*NET exploration, informational interviews, stepping-stone jobs.</li>
+              <li><b>Reframe stigma</b>"The offender, when given the opportunity, can be the best employee."</li>
+            </ul>
+          </div>
+          <div class="side">
+            <span class="side__role">Business Services Coordinators</span>
+            <span class="side__who">Working the employer side</span>
+            <ul>
+              <li><b>Act as outsourced HR</b>Small employers lack HR departments — BSCs co-write job calls that attract the right candidates.</li>
+              <li><b>Argue for fair wages with data</b>Quarterly wage and labor-market reports; a 50¢/hour difference moves workers between companies.</li>
+              <li><b>Engineer the conditions</b>Shuttle and carpool programs, flexible schedules, on-the-job training — fixing turnover at its causes.</li>
+              <li><b>Train employers toward inclusion</b>Opening positions to returning citizens and workers with disabilities.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODERATOR EXPLORER -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">From Practice to Design — The Framework</span>
+      <span class="viz__note">Select a moderator · per Table 1 of the paper</span>
+    </div>
+    <div class="viz__body">
+      <div class="modtabs" role="tablist" aria-label="Decent work moderators">
+        <button class="modtab on" data-mod="econ" type="button">Economic conditions</button>
+        <button class="modtab" data-mod="social" type="button">Social support</button>
+        <button class="modtab" data-mod="proactive" type="button">Proactive personality</button>
+        <button class="modtab" data-mod="critical" type="button">Critical consciousness</button>
+        <button class="modtab modtab--new" data-mod="stigma" type="button">Feelings of stigma ★</button>
+      </div>
+      <div class="modpanel">
+        <div class="modcard">
+          <span class="modcard__k">WHAT EMPLOYMENT CENTERS DO</span>
+          <p id="modpractice"><b>CAs</b> connected job seekers to external resources specific to their needs — housing, transport, expungement. <b>BSCs</b> worked with employers on more inclusive job calls, wages, and working conditions.</p>
+          <div class="modquote" id="modquote">"Each person comes in with their own unique barrier and how do we assist them with solving that barrier? That probably takes the most work than anything else."<span id="modattr">— CAREER ADVISOR 8</span></div>
+        </div>
+        <div class="modcard">
+          <span class="modcard__k alt">DESIGN OPPORTUNITIES FOR CSCW</span>
+          <p id="moddesign">ML that detects discriminatory language in job ads before posting · worker-centered rating systems recognizing fair employers · interfaces connecting seekers to local support organizations · alternative gig platforms with free carpool matching.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The contribution</h2>
+      <div class="case-body">
+        <p>Two findings mattered most to theory and design. First, we found
+        <strong>no evidence of critical consciousness work</strong> — the
+        PWT moderator about recognizing and challenging structural barriers.
+        Centers are too busy with urgent needs; the paper argues this is
+        precisely where design can create space ("are certain 'soft skills'
+        truly an issue, or is the requirement rooted in social injustice?").</p>
+        <p>Second, we proposed a moderator the theory didn't have:
+        <strong>mitigating feelings of stigma</strong>. Career advisors spent
+        real interpersonal effort reframing setbacks — ex-offender status,
+        employment gaps — so seekers could keep going and recover from
+        rejection. Employment tools don't do any of this today, and there's
+        no technical reason they couldn't.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The outcome</h2>
+      <div class="case-body">
+        <div class="outcomes">
+          <div class="outcome"><span class="outcome__num">CSCW</span><span class="outcome__label mono">PROC. ACM HCI VOL. 5, ART. 324 (OCT 2021)</span></div>
+          <div class="outcome"><span class="outcome__num">+1</span><span class="outcome__label mono">NEW MODERATOR PROPOSED — FEELINGS OF STIGMA</span></div>
+          <div class="outcome"><span class="outcome__num">5</span><span class="outcome__label mono">MODERATOR FRAMEWORK FOR TOOL DESIGNERS</span></div>
+        </div>
+        <p style="margin-top:2rem">The framework gives employment-tool
+        designers a map: what centers already do for economic conditions,
+        social support, proactivity, and stigma — and where tools could
+        complement rather than replace that human infrastructure. Published
+        amid COVID-19's employment shock, when the economic brunt fell on
+        exactly these job seekers. Supported by NSF award IIS-1717186.</p>
+        <p>Most of what we "found," the career advisors already knew. The
+        research's job was getting that knowledge into the literature where
+        tool designers will actually see it.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="case-next">
+    <span class="k mono">NEXT CASE STUDY — 07 / 07</span>
+    <a class="case-next__link" href="generative-justice.html">Generative Justice Lab →</a>
+  </section>
+</main>
+
+<p class="case-disclaimer mono">CONTENT BASED ON DILLAHUNT, GARVIN, HELD &amp; HUI, "IMPLICATIONS FOR SUPPORTING MARGINALIZED JOB SEEKERS" (CSCW 2021, DOI 10.1145/3476065). DIAGRAMS ARE WEB RECREATIONS OF THE PAPER'S MODELS.</p>
+
+<footer class="footer">
+  <p class="mono">© 2026 MATTHEW GARVIN · <a href="https://vinsettastudio.com/" target="_blank" rel="noopener">DESIGNED BY VINSETTA STUDIO LLC</a></p>
+  <div class="footer__links mono">
+    <a href="https://www.linkedin.com/in/matthew-garvin-7260724a/" target="_blank" rel="noopener">LINKEDIN</a>
+    <a href="https://github.com/mtthwgrvn" target="_blank" rel="noopener">GITHUB</a>
+    <a href="https://mtthwx.com" target="_blank" rel="noopener">BLOG</a>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="js/main.js"></script>
+<script>
+(function () {
+  var data = {
+    econ: {
+      practice: 'CAs connected job seekers to external resources specific to their needs — housing, transport, expungement. BSCs worked with employers on more inclusive job calls, wages, and working conditions.',
+      quote: '"Each person comes in with their own unique barrier and how do we assist them with solving that barrier? That probably takes the most work than anything else."',
+      attr: '— CAREER ADVISOR 8',
+      design: 'ML that detects discriminatory language in job ads before posting · worker-centered rating systems recognizing fair employers · interfaces connecting seekers to local support organizations · alternative gig platforms with free carpool matching.'
+    },
+    social: {
+      practice: 'CAs provided the encouragement that personal networks often could not — emotional support to keep applying, deal with rejection, and persist through long benefit applications.',
+      quote: '"I start off by helping the offenders realize they’re not alone... Help the person realize, it’s all about their skill set."',
+      attr: '— CAREER ADVISOR 3',
+      design: 'Step-by-step guidance for benefits, cover letters, and résumés — intelligent tutors for application systems · peer support communities like the "WeCanDoIt" concept, which marginalized seekers preferred over network-dependent tools.'
+    },
+    proactive: {
+      practice: 'CAs converted "the house is on fire" crisis-mode into strategy: O*NET career exploration, informational interviews, and stepping-stone positions mapped against long-term goals.',
+      quote: '"He’s taken a job at Best Buy on the Geek Squad, which is below what he’d like to earn. But, it might turn out to be a good stepping stone for him."',
+      attr: '— CAREER ADVISOR 1',
+      design: 'Support exploration of new job opportunities and career pathways · suggest alternate employment routes (e.g., DreamGigs) · scaffold the process of contacting employers and experts directly.'
+    },
+    critical: {
+      practice: 'Not observed. Centers were consumed by urgent needs; no staff practices fostered critical reflection on structural barriers — the gap our paper highlights.',
+      quote: '"Suggesting the development of time management skills to a job seeker who is frequently late would be unproductive if transportation is unavailable or unpredictable to them."',
+      attr: '— FROM THE DISCUSSION',
+      design: 'Acknowledge job-search inequalities and create spaces for interrogation · empower seekers to learn together and act collectively — entrepreneurship, worker-owned cooperatives, new forms of work.'
+    },
+    stigma: {
+      practice: 'NEW MODERATOR — our contribution. CAs reframed setbacks (criminal records, employment gaps) so seekers could recover from rejection and keep searching; BSCs encouraged employers toward diverse hiring.',
+      quote: '"Invariably people, the offenders, tell me they’re not afraid of interviewing anymore. They’re not afraid of having a background."',
+      attr: '— CAREER ADVISOR 3',
+      design: 'Stigma-reducing language in job platforms · encouragement throughout the online search process · peer communities among people facing similar challenges, shown to reduce stigma and build support.'
+    }
+  };
+  var practice = document.getElementById('modpractice'),
+      quote = document.getElementById('modquote'),
+      attr = document.getElementById('modattr'),
+      design = document.getElementById('moddesign');
+  document.querySelectorAll('.modtab').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.modtab').forEach(function (b) { b.classList.remove('on'); });
+      btn.classList.add('on');
+      var d = data[btn.getAttribute('data-mod')];
+      practice.textContent = d.practice;
+      quote.firstChild.textContent = d.quote;
+      attr.textContent = d.attr;
+      design.textContent = d.design;
+    });
+  });
+
+  /* reveals */
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduced && typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+    document.querySelectorAll('.viz, .side, .modcard, .stato__cell').forEach(function (el) {
+      gsap.from(el, {
+        opacity: 0, y: 26, duration: 0.7, ease: 'power3.out',
+        scrollTrigger: { trigger: el, start: 'top 92%' }
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>

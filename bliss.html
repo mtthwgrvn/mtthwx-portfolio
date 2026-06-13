@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- BLiSS case study — rebuilt from "Enabling a Voice Management System for Space Applications" (Vega, Garvin, et al., NASA M2M X-HAB) -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BLiSS — Diego VUI · Matthew Garvin</title>
+<meta name="description" content="Case study: Diego, a voice user interface persona for autonomous spacecraft systems — NASA M2M X-HAB challenge, BLiSS lab, University of Michigan.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+:root { --accent: #FFC65D; }
+
+/* ---------- shared viz panel ---------- */
+.viz {
+  margin: clamp(3rem, 7vw, 5rem) var(--pad);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: var(--bg-2);
+  overflow: hidden;
+}
+.viz__head {
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--hairline);
+}
+.viz__title { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+.viz__note { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); text-align: right; }
+.viz__body { padding: clamp(1.2rem, 3vw, 2.5rem); }
+
+/* ---------- survey bars + traits ---------- */
+.fnbars { display: flex; flex-direction: column; gap: 12px; max-width: 640px; }
+.fnbar { display: grid; grid-template-columns: 11rem 1fr; gap: 14px; align-items: center; }
+.fnbar__label { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); text-align: right; }
+.fnbar__track { height: 10px; border-radius: 999px; background: rgba(236,235,230,0.07); overflow: hidden; }
+.fnbar__fill { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, rgba(255,198,93,0.45), #FFC65D); }
+@media (max-width: 560px) { .fnbar { grid-template-columns: 7.2rem 1fr; } }
+.traits { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 1.6rem; }
+.traits span {
+  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase;
+  border: 1px solid var(--hairline); border-radius: 999px; padding: 0.45rem 0.85rem; color: var(--ink-dim);
+}
+.traits span.hot { border-color: var(--accent); color: var(--accent); }
+.traits__cap { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); margin-top: 0.8rem; display: block; }
+
+/* ---------- persona cards ---------- */
+.personas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@media (max-width: 820px) { .personas { grid-template-columns: 1fr; } }
+.persona { border: 1px solid var(--hairline); border-radius: 6px; background: rgba(8,8,14,0.5); padding: 1.3rem; position: relative; }
+.persona--sel { border-color: var(--accent); }
+.persona__badge {
+  position: absolute; top: -10px; right: 12px;
+  font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.14em;
+  background: var(--accent); color: var(--bg); border-radius: 999px; padding: 0.25rem 0.7rem;
+}
+.persona h3 { font-size: 1.2rem; font-weight: 600; margin: 0 0 0.2rem; }
+.persona .meta { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); display: block; margin-bottom: 0.8rem; }
+.persona p { font-size: 0.85rem; color: var(--ink-dim); margin: 0; line-height: 1.6; }
+.persona--sel .meta { color: var(--accent); }
+
+/* ---------- Diego console ---------- */
+.dtabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.3rem; }
+.dtab {
+  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 0.55rem 1rem; border-radius: 999px;
+  background: transparent; color: var(--ink-dim);
+  border: 1px solid var(--hairline); cursor: pointer;
+  transition: all 0.25s;
+}
+.dtab:hover { color: var(--ink); }
+.dtab.on { border-color: var(--accent); color: var(--accent); }
+.chat { max-width: 620px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; min-height: 300px; }
+.chat__msg { display: flex; flex-direction: column; gap: 4px; max-width: 88%; }
+.chat__msg--astro { align-self: flex-end; align-items: flex-end; }
+.chat__msg--diego { align-self: flex-start; }
+.chat__bubble {
+  padding: 0.7rem 1rem; border-radius: 12px;
+  font-size: 0.88rem; line-height: 1.5; color: var(--ink);
+}
+.chat__msg--astro .chat__bubble { background: rgba(255,198,93,0.14); border: 1px solid rgba(255,198,93,0.4); border-bottom-right-radius: 3px; }
+.chat__msg--diego .chat__bubble { background: rgba(236,235,230,0.05); border: 1px solid var(--hairline); border-bottom-left-radius: 3px; }
+.chat__meta { font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
+.chat__meta .intent { color: var(--accent); }
+.dwake {
+  display: inline-flex; align-items: center; gap: 8px; align-self: center;
+  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent); border: 1px solid rgba(255,198,93,0.5); border-radius: 999px; padding: 0.45rem 1rem;
+}
+.dwake .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: dpulse 1.6s ease-in-out infinite; }
+@keyframes dpulse { 0%,100% { opacity: 1; transform: scale(1);} 50% { opacity: 0.35; transform: scale(0.7);} }
+.dactions { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-top: 1.3rem; }
+.dbtn {
+  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 0.55rem 1rem; border-radius: 999px;
+  background: transparent; color: var(--accent);
+  border: 1px solid var(--accent); cursor: pointer;
+  transition: all 0.25s;
+}
+.dbtn:hover { background: var(--accent); color: var(--bg); }
+
+/* ---------- pipeline svg ---------- */
+.pipe { width: 100%; height: auto; display: block; }
+.pipe text { font-family: "IBM Plex Mono", monospace; }
+.pipe .box { fill: rgba(8,8,14,0.6); stroke: rgba(236,235,230,0.18); }
+.pipe .box--accent { stroke: rgba(255,198,93,0.6); }
+.pipe .lbl { fill: #ecebe6; font-size: 10.5px; letter-spacing: 0.08em; }
+.pipe .sub { fill: #9b9a93; font-size: 8.5px; letter-spacing: 0.05em; }
+.pipe .tag { fill: #FFC65D; font-size: 8.5px; letter-spacing: 0.14em; }
+.pipe .wire { fill: none; stroke: rgba(255,198,93,0.55); stroke-width: 1.3; stroke-dasharray: 5 5; animation: pipewire 1.4s linear infinite; }
+@keyframes pipewire { to { stroke-dashoffset: -10; } }
+@media (prefers-reduced-motion: reduce) { .pipe .wire, .dwake .dot { animation: none; } }
+
+/* ---------- noise lab ---------- */
+.noise { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1.2rem, 3vw, 2.4rem); }
+@media (max-width: 820px) { .noise { grid-template-columns: 1fr; } }
+.dbchart { display: flex; flex-direction: column; gap: 12px; }
+.dbrow { display: grid; grid-template-columns: 8.5rem 1fr 3.2rem; gap: 12px; align-items: center; }
+.dbrow__label { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); text-align: right; }
+.dbrow__track { height: 12px; border-radius: 999px; background: rgba(236,235,230,0.07); overflow: hidden; position: relative; }
+.dbrow__fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, rgba(255,198,93,0.4), #FFC65D); transition: width 0.7s cubic-bezier(0.65,0,0.35,1); }
+.dbrow--hot .dbrow__fill { background: linear-gradient(90deg, rgba(255,93,93,0.5), #ff5d5d); }
+.dbrow__val { font-family: var(--font-mono); font-size: 0.64rem; color: var(--ink-dim); }
+.ntoggles { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 1.2rem; }
+.ntog {
+  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 0.55rem 1rem; border-radius: 999px;
+  background: transparent; color: var(--ink-dim);
+  border: 1px solid var(--hairline); cursor: pointer; transition: all 0.25s;
+}
+.ntog.on { border-color: var(--accent); color: var(--accent); }
+.nfoams { display: flex; flex-direction: column; gap: 10px; }
+.nfoam { border: 1px solid var(--hairline); border-radius: 6px; background: rgba(8,8,14,0.5); padding: 0.9rem 1.1rem; display: grid; grid-template-columns: 2.4rem 1fr auto; gap: 0.9rem; align-items: center; }
+.nfoam--best { border-color: var(--accent); }
+.nfoam__id { font-family: var(--font-mono); font-size: 1rem; color: var(--accent); }
+.nfoam__desc { font-size: 0.82rem; color: var(--ink-dim); }
+.nfoam__stat { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; color: var(--ink-dim); text-align: right; }
+.nfoam--best .nfoam__stat { color: var(--accent); }
+</style>
+</head>
+<body data-page="case">
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor" aria-hidden="true"></div>
+
+<header class="nav">
+  <a class="nav__logo" href="index.html">MG<sup>®</sup></a>
+  <nav class="nav__links" aria-label="Primary">
+    <a href="index.html#work">Work</a>
+    <a href="index.html#about">About</a>
+    <a href="index.html#contact">Contact</a>
+  </nav>
+  <div class="nav__meta mono">CASE STUDY — 05 / 07</div>
+</header>
+
+<main id="main">
+  <section class="case-hero">
+    <p class="case-hero__label mono">BLiSS · BIOASTRONAUTICS &amp; LIFE SUPPORT SYSTEMS · NASA M2M X-HAB CHALLENGE</p>
+    <h1 class="case-hero__title">
+      <span class="line"><span>"Hey Diego" —</span></span>
+      <span class="line"><span>a crewmate, not a console.</span></span>
+    </h1>
+    <p class="case-hero__sub">Artemis crews will run their spacecraft without hundreds of flight
+    controllers on the ground. For NASA's Moon-to-Mars X-HAB Academic
+    Innovation Challenge, the BLiSS team designed Diego: a voice user
+    interface persona for autonomous systems — built with NASA Stennis's
+    NPAS platform, grounded in surveys of "Artemis Generation Astronauts,"
+    and engineered to be heard over a space station's noise.</p>
+    <div class="case-meta">
+      <div class="case-meta__cell"><span class="k mono">ROLE</span><span class="v">Conversation Design · co-author</span></div>
+      <div class="case-meta__cell"><span class="k mono">TEAM</span><span class="v">BLiSS subteams: Voice Design, GUI, Software Integration, Noise Mitigation · w/ NASA Stennis Autonomous Systems Lab</span></div>
+      <div class="case-meta__cell"><span class="k mono">METHODS</span><span class="v">User surveys, persona design, dialogue design, Wizard-style trade studies</span></div>
+      <div class="case-meta__cell"><span class="k mono">OUTCOME</span><span class="v">Working NPAS-compatible VUI prototype · 4 conversation categories · published findings</span></div>
+    </div>
+  </section>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The challenge</h2>
+      <div class="case-body">
+        <p>Today, dozens to hundreds of flight controllers and subject-matter
+        experts run real-time troubleshooting, just-in-time training, and
+        procedures from the ground. Beyond low Earth orbit, that lifeline
+        thins. Crews need to interact with a spacecraft's autonomous systems
+        directly — hands-free and eyes-free, because in space both hands are
+        usually busy.</p>
+        <p class="pull">The system had to do more than execute commands. On a
+        long-duration mission, a voice in the habitat is part of the crew's
+        psychological environment.</p>
+        <p>Long-duration spaceflight brings motivational decline, fatigue,
+        insomnia, and social tension. Astronauts surrounded by peers can
+        still feel lonely. The brief we set ourselves: a voice management
+        system that supports daily operations <strong>and</strong> behavioral
+        health — raising alerts in a calm voice rather than with alarms.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SURVEYS -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">Research — Two Surveys of "Artemis Generation Astronauts"</span>
+      <span class="viz__note">Bar lengths illustrative of reported rankings</span>
+    </div>
+    <div class="viz__body">
+      <p class="mono" style="color:var(--ink-dim);font-size:0.62rem;letter-spacing:0.1em;margin:0 0 1.1rem">SURVEY 01 — WHAT SHOULD A VUI DO? (TOP REQUESTED FUNCTIONS)</p>
+      <div class="fnbars">
+        <div class="fnbar"><span class="fnbar__label">Manage schedule</span><div class="fnbar__track"><div class="fnbar__fill" data-w="92"></div></div></div>
+        <div class="fnbar"><span class="fnbar__label">Task instructions</span><div class="fnbar__track"><div class="fnbar__fill" data-w="86"></div></div></div>
+        <div class="fnbar"><span class="fnbar__label">Respond to emergencies</span><div class="fnbar__track"><div class="fnbar__fill" data-w="80"></div></div></div>
+        <div class="fnbar"><span class="fnbar__label">Monitor station vitals</span><div class="fnbar__track"><div class="fnbar__fill" data-w="74"></div></div></div>
+        <div class="fnbar"><span class="fnbar__label">Communication</span><div class="fnbar__track"><div class="fnbar__fill" data-w="68"></div></div></div>
+        <div class="fnbar"><span class="fnbar__label">Calculations · notes · internet</span><div class="fnbar__track"><div class="fnbar__fill" data-w="55"></div></div></div>
+      </div>
+      <p class="mono" style="color:var(--ink-dim);font-size:0.62rem;letter-spacing:0.1em;margin:2rem 0 0">SURVEY 02 — PICK FROM 45 TRAITS: WHAT PERSONALITY SHOULD IT HAVE?</p>
+      <div class="traits">
+        <span>LOGICAL</span><span>EFFICIENT</span><span>ARTICULATE</span><span>KNOWLEDGEABLE</span><span>ORGANIZED</span>
+        <span class="hot">FRIENDLY</span><span class="hot">CALM</span><span class="hot">WARM</span><span class="hot">KIND</span>
+      </div>
+      <span class="traits__cap">THE HIGHLIGHTED TRAITS WERE THE SURPRISE: ALONGSIDE LOGICAL AND EFFICIENT, RESPONDENTS ASKED FOR FRIENDLY, CALM, AND WARM.</span>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>Designing the persona</h2>
+      <div class="case-body">
+        <p>Voice assistants on station have a history — Clarissa (NASA/Xerox,
+        demoed 2005 at Michigan), Airbus's CIMON on the ISS, and NASA
+        Stennis's AVA prototype. CIMON's lessons loomed large: it wasn't
+        fully integrated into the ISS, and it wasn't accessible everywhere.
+        And existing voice technologies wear thin fast — they misinterpret you,
+        then make you repeat yourself.</p>
+        <p>Each Voice Design team member drafted a complete human persona —
+        biography, voice, temperament — and we pressure-tested them against
+        the survey traits. The result was Diego: kind yet logical, expressing
+        personality through vocabulary, varied phrasing, and humor in regular
+        dialogue.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PERSONAS -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">Persona Candidates</span>
+      <span class="viz__note">From the Voice Design team's brainstorm</span>
+    </div>
+    <div class="viz__body">
+      <div class="personas">
+        <div class="persona">
+          <h3>Marie</h3>
+          <span class="meta">53 · RETIRED USAF FLIGHT INSTRUCTOR · DAYTON, OH</span>
+          <p>Thirty years a pilot; now teaches the next generation at the Air
+          Force Academy. Cuts through nonsense, deflates egos, deeply loves
+          the craft. Authority you'd trust in an emergency.</p>
+        </div>
+        <div class="persona">
+          <h3>Carl</h3>
+          <span class="meta">DESERT STORM VET · NYC CABBIE · HAM RADIO SEMI-CELEBRITY</span>
+          <p>Drives a cab because he likes hearing people's stories and
+          telling his own — "Cabbie tales from NYC," broadcast to 71
+          countries. Warmth and chatter that fills a lonely room.</p>
+        </div>
+        <div class="persona persona--sel">
+          <span class="persona__badge">SELECTED</span>
+          <h3>Diego</h3>
+          <span class="meta">KIND YET LOGICAL · ORGANIZED · FRIENDLY</span>
+          <p>The synthesis the surveys asked for: educated, organized, and
+          articulate — but warm, calm, and quick with a joke. Personality
+          carried through vocabulary, varied response phrasing, and voice.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIEGO CONSOLE -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">Talking to Diego — Four Request Categories</span>
+      <span class="viz__note">Dialogues follow the paper's design patterns</span>
+    </div>
+    <div class="viz__body">
+      <div class="dtabs" role="tablist" aria-label="Request categories">
+        <button class="dtab on" data-cat="tasks" type="button">Tasks</button>
+        <button class="dtab" data-cat="schedule" type="button">Scheduling</button>
+        <button class="dtab" data-cat="comms" type="button">Communication</button>
+        <button class="dtab" data-cat="vitals" type="button">Station vitals</button>
+      </div>
+      <div class="chat" id="dchat" aria-live="polite"></div>
+      <div class="dactions">
+        <button class="dbtn" id="dregen" type="button">Ask again — vary the phrasing</button>
+        <span class="viz__note">SAME INTENT, DIFFERENT RESPONSE EACH TIME — SO DIEGO NEVER SOUNDS CANNED</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The voice pipeline</h2>
+      <div class="case-body">
+        <p>Every component had to run <strong>offline</strong> — no internet
+        beyond LEO — on modest hardware: development on Ubuntu, migrating to
+        two Raspberry Pis for integration testing. Trade studies selected
+        each stage: Porcupine for wake-word detection ("Hey Diego" is the
+        only phrase that wakes it), Mozilla DeepSpeech for transcription,
+        Rasa for intent and entity extraction, and Coqui for a natural
+        text-to-speech voice.</p>
+        <p>Unlike CIMON, Diego is built into the station itself: fixed
+        microphones in every module, and a bridge into NASA's
+        Platform for Autonomous Systems (NPAS) so a spoken request becomes
+        an executable command set on the spacecraft's own autonomy layer.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PIPELINE -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">System Architecture — Utterance to Action</span>
+      <span class="viz__note">All components run offline · POSIX / Raspberry Pi</span>
+    </div>
+    <div class="viz__body" style="padding-bottom:1.6rem">
+      <svg class="pipe" viewBox="0 0 920 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diego voice pipeline: microphones feed Porcupine wake word detection, DeepSpeech transcription, Rasa natural language processing, then NPAS via a G2 bridge; responses return through Coqui text to speech to station speakers">
+        <text class="tag" x="40" y="34">CREW MODULE — FIXED MICS IN EVERY MODULE</text>
+        <rect class="box" x="40" y="48" width="150" height="56" rx="8"/>
+        <text class="lbl" x="58" y="72">MICROPHONES</text>
+        <text class="sub" x="58" y="88">PNC foam + ANC ≈ −20 dB</text>
+
+        <rect class="box box--accent" x="240" y="48" width="170" height="56" rx="8"/>
+        <text class="lbl" x="258" y="72">PORCUPINE</text>
+        <text class="sub" x="258" y="88">wake word — "Hey Diego"</text>
+
+        <rect class="box box--accent" x="460" y="48" width="170" height="56" rx="8"/>
+        <text class="lbl" x="478" y="72">DEEPSPEECH</text>
+        <text class="sub" x="478" y="88">offline speech-to-text</text>
+
+        <rect class="box box--accent" x="680" y="48" width="200" height="56" rx="8"/>
+        <text class="lbl" x="698" y="72">RASA NLU</text>
+        <text class="sub" x="698" y="88">intent + entity extraction</text>
+
+        <rect class="box box--accent" x="560" y="190" width="320" height="64" rx="8"/>
+        <text class="lbl" x="578" y="216">NPAS — G2 BRIDGE</text>
+        <text class="sub" x="578" y="232">NASA Platform for Autonomous Systems</text>
+        <text class="sub" x="578" y="244">executable command sets · station autonomy</text>
+
+        <rect class="box" x="240" y="190" width="240" height="64" rx="8"/>
+        <text class="lbl" x="258" y="216">COQUI TTS</text>
+        <text class="sub" x="258" y="232">natural voice response —</text>
+        <text class="sub" x="258" y="244">calm register for alerts</text>
+
+        <rect class="box" x="40" y="190" width="150" height="64" rx="8"/>
+        <text class="lbl" x="58" y="216">SPEAKERS</text>
+        <text class="sub" x="58" y="232">+ GUI mirror on</text>
+        <text class="sub" x="58" y="244">tablets &amp; watches</text>
+
+        <rect class="box" x="240" y="312" width="640" height="56" rx="8"/>
+        <text class="lbl" x="258" y="336">HARDWARE — 2× RASPBERRY PI · POSIX (UBUNTU → CENTOS)</text>
+        <text class="sub" x="258" y="352">fully offline: localized models, no internet dependency beyond LEO</text>
+
+        <path class="wire" d="M190 76 H 240"/>
+        <path class="wire" d="M410 76 H 460"/>
+        <path class="wire" d="M630 76 H 680"/>
+        <path class="wire" d="M780 104 V 190"/>
+        <path class="wire" d="M560 222 H 480"/>
+        <path class="wire" d="M240 222 H 190"/>
+      </svg>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>Heard over the noise</h2>
+      <div class="case-body">
+        <p>A station is loud, and a voice interface that keeps mishearing
+        people will simply get turned off. Scott Kelly wrote about feeling measurably "stupid" as
+        CO₂ rose; a system that monitors vitals by voice has to work in the
+        same harsh acoustic environment it reports on. The Background Noise
+        Mitigation team attacked the problem from both ends: passive
+        cancellation (foam panels absorbing high frequencies) and active
+        cancellation (anti-noise for low frequencies).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- NOISE LAB -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">Noise Mitigation — Test Results</span>
+      <span class="viz__note">Toggle the treatments · levels per the paper</span>
+    </div>
+    <div class="viz__body">
+      <div class="noise">
+        <div>
+          <div class="dbchart" id="dbchart">
+            <div class="dbrow"><span class="dbrow__label">Whisper</span><div class="dbrow__track"><div class="dbrow__fill" data-base="30"></div></div><span class="dbrow__val">30 dB</span></div>
+            <div class="dbrow"><span class="dbrow__label">Normal speech</span><div class="dbrow__track"><div class="dbrow__fill" data-base="60"></div></div><span class="dbrow__val">60 dB</span></div>
+            <div class="dbrow"><span class="dbrow__label">Target volume</span><div class="dbrow__track"><div class="dbrow__fill" data-base="70"></div></div><span class="dbrow__val">70 dB</span></div>
+            <div class="dbrow dbrow--hot"><span class="dbrow__label">Station noise (yelling)</span><div class="dbrow__track"><div class="dbrow__fill" data-base="93" data-reducible="1"></div></div><span class="dbrow__val" id="dbval">93 dB</span></div>
+          </div>
+          <div class="ntoggles">
+            <button class="ntog" id="tog-pnc" type="button">PNC FOAM (HIGH FREQ)</button>
+            <button class="ntog" id="tog-anc" type="button">ANC — NVIDIA RTX (LOW FREQ)</button>
+          </div>
+          <span class="traits__cap" id="noisecap">UNTREATED STATION ENVIRONMENT — COMMANDS COMPETE WITH MACHINERY</span>
+        </div>
+        <div class="nfoams">
+          <div class="nfoam"><span class="nfoam__id">A</span><span class="nfoam__desc">2" vertical-cut foam</span><span class="nfoam__stat">−20 dB @ HIGH FREQ</span></div>
+          <div class="nfoam"><span class="nfoam__id">B</span><span class="nfoam__desc">2" diamond-cut foam</span><span class="nfoam__stat">−20 dB @ HIGH FREQ</span></div>
+          <div class="nfoam nfoam--best"><span class="nfoam__id">C</span><span class="nfoam__desc">2" wave-cut foam — best performer; reductions begin at the lowest frequency tested</span><span class="nfoam__stat">−20 dB FROM 4,000 HZ</span></div>
+          <div class="nfoam"><span class="nfoam__id">D</span><span class="nfoam__desc">1" vertical-cut foam</span><span class="nfoam__stat">−20 dB @ HIGH FREQ</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The outcome</h2>
+      <div class="case-body">
+        <div class="outcomes">
+          <div class="outcome"><span class="outcome__num">4</span><span class="outcome__label mono">CONVERSATION CATEGORIES, FULLY EXPANDED</span></div>
+          <div class="outcome"><span class="outcome__num">−20dB</span><span class="outcome__label mono">NOISE REDUCTION — PNC + ANC COMBINED</span></div>
+          <div class="outcome"><span class="outcome__num">1</span><span class="outcome__label mono">WORKING NPAS-COMPATIBLE VUI PROTOTYPE</span></div>
+        </div>
+        <p style="margin-top:2rem">The project delivered a working prototype
+        interface compatible with NPAS, software demonstrating intent
+        interpretation and appropriate response, expanded conversations
+        across all four request categories, and hardware/software
+        recommendations for noisy environments — plus an Adobe XD GUI
+        (home screen, calls, messaging, notes, scheduling carousel, vitals
+        charts) for moments when voice isn't the right channel. Published
+        with our NASA Stennis collaborators.</p>
+        <p>The surveys turned warmth into a real requirement. On a long
+        mission, the crew hears this voice more than they hear most of each
+        other — every day, for months. A system can be accurate and still
+        wear on the people who have to live with it.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="case-next">
+    <span class="k mono">NEXT CASE STUDY — 06 / 07</span>
+    <a class="case-next__link" href="social-innovations.html">Social Innovations Lab →</a>
+  </section>
+</main>
+
+<p class="case-disclaimer mono">CONTENT BASED ON "ENABLING A VOICE MANAGEMENT SYSTEM FOR SPACE APPLICATIONS" (VEGA, GARVIN, ET AL., BLiSS × NASA STENNIS, M2M X-HAB). DIALOGUE TEXT FOLLOWS THE PAPER'S PATTERNS; SURVEY BAR LENGTHS ARE ILLUSTRATIVE.</p>
+
+<footer class="footer">
+  <p class="mono">© 2026 MATTHEW GARVIN · <a href="https://vinsettastudio.com/" target="_blank" rel="noopener">DESIGNED BY VINSETTA STUDIO LLC</a></p>
+  <div class="footer__links mono">
+    <a href="https://www.linkedin.com/in/matthew-garvin-7260724a/" target="_blank" rel="noopener">LINKEDIN</a>
+    <a href="https://github.com/mtthwgrvn" target="_blank" rel="noopener">GITHUB</a>
+    <a href="https://mtthwx.com" target="_blank" rel="noopener">BLOG</a>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="js/main.js"></script>
+<script>
+(function () {
+  /* ---------- Diego console ---------- */
+  var dialogues = {
+    tasks: {
+      user: 'Can you pull up instructions for toilet repair?',
+      intent: 'pull_instructions · ENTITY: "toilet repair"',
+      replies: ['Pulling up instructions for toilet repair.', 'Yes — pulling up now.', 'Here are the instructions for toilet repair.'],
+      follow: 'Diego, go to section 3.',
+      followIntent: 'navigate_document · ENTITY: section 3',
+      followReplies: ["Here's section 3.", 'Turning to section 3.']
+    },
+    schedule: {
+      user: "What's on my schedule at 1400?",
+      intent: 'query_schedule · ENTITY: 14:00',
+      replies: ['At 1400 you have the microgravity experiment in Module 2.', 'Your 1400 block: microgravity experiment, Module 2.', 'Microgravity experiment at 1400 — want a 10-minute heads-up?'],
+      follow: 'Add a reminder to call the ground at 1800.',
+      followIntent: 'add_reminder · ENTITY: 18:00',
+      followReplies: ['Reminder set for 1800.', "Got it — I'll remind you at 1800."]
+    },
+    comms: {
+      user: 'Send a voice message to Ariana.',
+      intent: 'send_message · ENTITY: Ariana · TYPE: voice',
+      replies: ['Recording now — go ahead.', "Ready when you are — I'll send it to Ariana.", 'Recording your message for Ariana.'],
+      follow: 'Actually, make it a text instead.',
+      followIntent: 'send_message · TYPE: text (revised)',
+      followReplies: ['No problem — dictate your text.', 'Switched to text. Go ahead.']
+    },
+    vitals: {
+      user: "Diego, what's the status on CO2?",
+      intent: 'query_vitals · ENTITY: CO₂',
+      replies: ['CO₂ is at 2.9 millimeters of mercury — nominal.', 'CO₂ reads 2.9 — within nominal range.', 'CO₂ is nominal at 2.9. Trend is flat over the last 6 hours.'],
+      follow: 'Alert me if it passes 4.',
+      followIntent: 'set_threshold_alert · ENTITY: CO₂ > 4',
+      followReplies: ["Done — I'll let you know calmly, no alarms.", 'Threshold set at 4. I will notify you.']
+    }
+  };
+  var cat = 'tasks', vi = 0;
+  var chatEl = document.getElementById('dchat');
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  function renderChat() {
+    var d = dialogues[cat];
+    var r1 = d.replies[vi % d.replies.length];
+    var r2 = d.followReplies[vi % d.followReplies.length];
+    chatEl.innerHTML =
+      '<span class="dwake"><span class="dot"></span>"HEY DIEGO" — PORCUPINE WAKE WORD DETECTED</span>' +
+      '<div class="chat__msg chat__msg--astro"><div class="chat__bubble">' + esc(d.user) + '</div><span class="chat__meta">ASTRONAUT → RASA: <span class="intent">' + esc(d.intent) + '</span></span></div>' +
+      '<div class="chat__msg chat__msg--diego"><div class="chat__bubble">' + esc(r1) + '</div><span class="chat__meta">DIEGO · COQUI TTS + GUI MIRROR</span></div>' +
+      '<div class="chat__msg chat__msg--astro"><div class="chat__bubble">' + esc(d.follow) + '</div><span class="chat__meta">ASTRONAUT → RASA: <span class="intent">' + esc(d.followIntent) + '</span></span></div>' +
+      '<div class="chat__msg chat__msg--diego"><div class="chat__bubble">' + esc(r2) + '</div><span class="chat__meta">DIEGO → NPAS G2 BRIDGE</span></div>';
+  }
+  document.querySelectorAll('.dtab').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.dtab').forEach(function (b) { b.classList.remove('on'); });
+      btn.classList.add('on');
+      cat = btn.getAttribute('data-cat'); vi = 0;
+      renderChat();
+    });
+  });
+  document.getElementById('dregen').addEventListener('click', function () { vi++; renderChat(); });
+  renderChat();
+
+  /* ---------- noise lab ---------- */
+  var pnc = false, anc = false;
+  var MAXDB = 100;
+  function noiseRender() {
+    document.querySelectorAll('.dbrow__fill').forEach(function (f) {
+      var base = +f.getAttribute('data-base');
+      var val = base;
+      if (f.getAttribute('data-reducible')) {
+        if (pnc) val -= 10;
+        if (anc) val -= 10;
+        document.getElementById('dbval').textContent = val + ' dB';
+        f.parentNode.parentNode.classList.toggle('dbrow--hot', val > 70);
+      }
+      f.style.width = (val / MAXDB * 100) + '%';
+    });
+    document.getElementById('tog-pnc').classList.toggle('on', pnc);
+    document.getElementById('tog-anc').classList.toggle('on', anc);
+    var cap = document.getElementById('noisecap');
+    if (pnc && anc) cap.textContent = 'PNC + ANC: ≈ −20 dB — STATION NOISE NOW SITS NEAR NORMAL SPEECH. DIEGO CAN HEAR YOU.';
+    else if (pnc) cap.textContent = 'WAVE-CUT FOAM ABSORBS HIGH FREQUENCIES (−20 dB ABOVE 4 KHZ ON SAMPLE C).';
+    else if (anc) cap.textContent = 'ANTI-NOISE CANCELS LOW FREQUENCIES — NVIDIA RTX WAS THE MOST ROBUST TESTED.';
+    else cap.textContent = 'UNTREATED STATION ENVIRONMENT — COMMANDS COMPETE WITH MACHINERY.';
+  }
+  document.getElementById('tog-pnc').addEventListener('click', function () { pnc = !pnc; noiseRender(); });
+  document.getElementById('tog-anc').addEventListener('click', function () { anc = !anc; noiseRender(); });
+  noiseRender();
+
+  /* ---------- survey bars + reveals ---------- */
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var fills = document.querySelectorAll('.fnbar__fill');
+  if (reduced || typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
+    fills.forEach(function (f) { f.style.width = f.getAttribute('data-w') + '%'; });
+  } else {
+    fills.forEach(function (f) {
+      gsap.to(f, {
+        width: f.getAttribute('data-w') + '%', duration: 1.1, ease: 'power3.out',
+        scrollTrigger: { trigger: f, start: 'top 90%' }
+      });
+    });
+    document.querySelectorAll('.viz, .persona, .nfoam, .traits span').forEach(function (el) {
+      gsap.from(el, {
+        opacity: 0, y: 24, duration: 0.7, ease: 'power3.out',
+        scrollTrigger: { trigger: el, start: 'top 92%' }
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>

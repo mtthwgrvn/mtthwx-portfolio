@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- ExMC case study — rebuilt from NASA/TM-20230002346 (Long Duration Foundation), NTRS 20220015633 (IMPACT outputs), and the author's MBSE UI case study -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exploration Medical Capability · Matthew Garvin</title>
+<meta name="description" content="Case study: UI architecture for NASA ExMC's model-based medical system foundation — making a SysML model usable by clinicians, engineers, and managers.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+:root { --accent: #FF5D5D; }
+
+/* ---------- shared viz panel ---------- */
+.viz {
+  margin: clamp(3rem, 7vw, 5rem) var(--pad);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: var(--bg-2);
+  overflow: hidden;
+}
+.viz__head {
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--hairline);
+}
+.viz__title { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+.viz__note { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); text-align: right; }
+.viz__body { padding: clamp(1.2rem, 3vw, 2.5rem); }
+
+/* ---------- DRM panel ---------- */
+.drm { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--hairline); border: 1px solid var(--hairline); }
+.drm__cell { background: var(--bg); padding: 1.4rem 1.2rem; }
+.drm__num { display: block; font-size: clamp(1.7rem, 3.2vw, 2.5rem); font-weight: 600; line-height: 1; color: var(--accent); letter-spacing: -0.02em; }
+.drm__label { display: block; margin-top: 0.55rem; font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
+@media (max-width: 820px) { .drm { grid-template-columns: 1fr 1fr; } }
+.mtl { margin-top: 1.4rem; }
+.mtl__bar { display: flex; height: 30px; border-radius: 6px; overflow: hidden; border: 1px solid var(--hairline); }
+.mtl__seg { display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.1em; color: var(--ink); }
+.mtl__seg--orbit1 { background: rgba(255,93,93,0.12); width: 33.3%; }
+.mtl__seg--surface { background: rgba(255,93,93,0.42); width: 33.3%; color: var(--bg); font-weight: 500; }
+.mtl__seg--orbit2 { background: rgba(255,93,93,0.12); width: 33.3%; }
+.mtl__legend { display: flex; justify-content: space-between; margin-top: 0.5rem; font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
+
+/* ---------- IMPACT sim ---------- */
+.sim__count { font-size: clamp(2.4rem, 6vw, 4.2rem); font-weight: 600; letter-spacing: -0.02em; color: var(--accent); line-height: 1; font-variant-numeric: tabular-nums; }
+.sim__caption { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-dim); margin-top: 0.5rem; display: block; }
+.simbars { display: flex; flex-direction: column; gap: 14px; margin-top: 1.8rem; max-width: 640px; }
+.simbar { display: grid; grid-template-columns: 13rem 1fr; gap: 14px; align-items: center; }
+.simbar__label { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-dim); text-align: right; }
+.simbar__track { height: 12px; border-radius: 999px; background: rgba(236,235,230,0.07); overflow: hidden; }
+.simbar__fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, rgba(255,93,93,0.45), #FF5D5D); transition: width 0.8s cubic-bezier(0.65,0,0.35,1); }
+@media (max-width: 600px) { .simbar { grid-template-columns: 8rem 1fr; } }
+.simtoggles { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 1.5rem; }
+.simtog {
+  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 0.55rem 1rem; border-radius: 999px;
+  background: transparent; color: var(--ink-dim);
+  border: 1px solid var(--hairline); cursor: pointer; transition: all 0.25s;
+}
+.simtog.on { border-color: var(--accent); color: var(--accent); }
+.simchips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 1.2rem; }
+.simchips span { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; border: 1px solid rgba(255,93,93,0.45); color: var(--accent); border-radius: 999px; padding: 0.4rem 0.8rem; opacity: 0; transition: opacity 0.4s; }
+.simchips.show span { opacity: 1; }
+
+/* ---------- MBSE pipeline svg ---------- */
+.mbse { width: 100%; height: auto; display: block; }
+.mbse text { font-family: "IBM Plex Mono", monospace; }
+.mbse .box { fill: rgba(8,8,14,0.6); stroke: rgba(236,235,230,0.18); }
+.mbse .box--accent { stroke: rgba(255,93,93,0.6); }
+.mbse .lbl { fill: #ecebe6; font-size: 10.5px; letter-spacing: 0.08em; }
+.mbse .sub { fill: #9b9a93; font-size: 8.5px; letter-spacing: 0.05em; }
+.mbse .tag { fill: #FF5D5D; font-size: 8.5px; letter-spacing: 0.14em; }
+.mbse .wire { fill: none; stroke: rgba(255,93,93,0.55); stroke-width: 1.3; stroke-dasharray: 5 5; animation: mbsewire 1.4s linear infinite; }
+@keyframes mbsewire { to { stroke-dashoffset: -10; } }
+@media (prefers-reduced-motion: reduce) { .mbse .wire { animation: none; } }
+
+/* ---------- before/after report ---------- */
+.batoggles { display: flex; gap: 8px; margin-bottom: 1.3rem; }
+.batog {
+  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 0.55rem 1.1rem; border-radius: 999px;
+  background: transparent; color: var(--ink-dim);
+  border: 1px solid var(--hairline); cursor: pointer; transition: all 0.25s;
+}
+.batog.on { border-color: var(--accent); color: var(--accent); }
+.browser { border: 1px solid var(--hairline); border-radius: 10px; overflow: hidden; background: #0a0a10; }
+.browser__bar { display: flex; align-items: center; gap: 8px; padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--hairline); background: rgba(236,235,230,0.04); }
+.browser__dots span { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: rgba(236,235,230,0.18); margin-right: 5px; }
+.browser__url { flex: 1; font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.05em; color: var(--ink-dim); background: rgba(8,8,14,0.7); border: 1px solid var(--hairline); border-radius: 999px; padding: 0.3rem 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.browser__body { padding: 1.1rem 1.2rem 1.4rem; min-height: 330px; font-size: 0.82rem; }
+/* before state */
+.rb-tree { font-family: var(--font-mono); font-size: 0.68rem; line-height: 2; color: var(--ink-dim); }
+.rb-tree .lvl1 { padding-left: 0; }
+.rb-tree .lvl2 { padding-left: 1.1rem; }
+.rb-tree .lvl3 { padding-left: 2.2rem; }
+.rb-tree .lvl4 { padding-left: 3.3rem; }
+.rb-tree .lvl5 { padding-left: 4.4rem; }
+.rb-tree .ic { color: var(--ink-dim); opacity: 0.8; margin-right: 0.3rem; }
+.rb-flag {
+  display: inline-block; font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.1em;
+  border: 1px solid rgba(255,93,93,0.6); color: var(--accent); border-radius: 999px; padding: 0.15rem 0.5rem; margin-left: 0.5rem;
+}
+/* after state */
+.ra-crumbs { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.08em; color: var(--ink-dim); margin-bottom: 1rem; }
+.ra-crumbs a { color: var(--accent); }
+.ra-doc h3 { font-family: var(--font-display); font-size: 1.05rem; font-weight: 600; color: var(--ink); margin: 0 0 0.5rem; }
+.ra-doc p { color: var(--ink-dim); font-size: 0.82rem; margin: 0 0 0.9rem; line-height: 1.6; }
+.ra-doc details { border: 1px solid var(--hairline); border-radius: 6px; margin-bottom: 8px; }
+.ra-doc summary { cursor: pointer; padding: 0.65rem 0.9rem; font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); list-style: none; display: flex; justify-content: space-between; }
+.ra-doc summary::after { content: "+"; color: var(--accent); }
+.ra-doc details[open] summary::after { content: "−"; }
+.ra-doc details div { padding: 0 0.9rem 0.85rem; color: var(--ink-dim); font-size: 0.8rem; line-height: 1.6; }
+.ra-doc .req-id { color: var(--accent); font-family: var(--font-mono); }
+
+/* ---------- trace chain ---------- */
+.trtabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.3rem; }
+.trchain { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.trnode { border: 1px solid var(--hairline); border-radius: 6px; background: rgba(8,8,14,0.5); padding: 0.9rem; position: relative; }
+.trnode::after { content: "→"; position: absolute; right: -12px; top: 50%; transform: translateY(-50%); color: var(--accent); font-size: 0.85rem; z-index: 1; }
+.trnode:last-child::after { display: none; }
+.trnode .k { font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.12em; color: var(--accent); display: block; margin-bottom: 0.4rem; text-transform: uppercase; }
+.trnode p { font-size: 0.76rem; color: var(--ink-dim); margin: 0; line-height: 1.5; }
+@media (max-width: 900px) {
+  .trchain { grid-template-columns: 1fr; }
+  .trnode::after { content: "↓"; right: auto; left: 50%; top: auto; bottom: -16px; transform: translateX(-50%); }
+}
+</style>
+</head>
+<body data-page="case">
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor" aria-hidden="true"></div>
+
+<header class="nav">
+  <a class="nav__logo" href="index.html">MG<sup>®</sup></a>
+  <nav class="nav__links" aria-label="Primary">
+    <a href="index.html#work">Work</a>
+    <a href="index.html#about">About</a>
+    <a href="index.html#contact">Contact</a>
+  </nav>
+  <div class="nav__meta mono">CASE STUDY — 03 / 07</div>
+</header>
+
+<main id="main">
+  <section class="case-hero">
+    <p class="case-hero__label mono">EXPLORATION MEDICAL CAPABILITY · NASA HUMAN RESEARCH PROGRAM · JOHNSON SPACE CENTER</p>
+    <h1 class="case-hero__title">
+      <span class="line"><span>A hospital that exists</span></span>
+      <span class="line"><span>only as a model.</span></span>
+    </h1>
+    <p class="case-hero__sub">Before any Artemis medical system is built, it exists as a SysML model:
+    the Long Duration Foundation — a Level of Care IV medical system for
+    nine-month lunar orbit and surface missions, complete with ConOps,
+    700+ clinical capabilities, and traced requirements. As UI Architect
+    embedded with the MBSE team, my job was the layer where humans meet
+    that model: the web reports clinicians, engineers, and managers
+    actually use.</p>
+    <div class="case-meta">
+      <div class="case-meta__cell"><span class="k mono">ROLE</span><span class="v">UI Architect, embedded with the ExMC Systems Engineering team</span></div>
+      <div class="case-meta__cell"><span class="k mono">CONTEXT</span><span class="v">Level of Care IV · lunar orbit + surface, up to 275 days · NASA-STD-3001</span></div>
+      <div class="case-meta__cell"><span class="k mono">METHODS</span><span class="v">Heuristic evaluation, IA redesign, Jakob's Law &amp; Shneiderman's mantra, maintainable design patterns</span></div>
+      <div class="case-meta__cell"><span class="k mono">OUTCOME</span><span class="v">Redesigned model web reports · FY22 Foundation delivery (OMB milestone)</span></div>
+    </div>
+  </section>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The mission</h2>
+      <div class="case-body">
+        <p>The design reference mission is demanding: nine months in
+        cis-lunar space, including three on the surface, with a crew of
+        four and a physician-level Crew Medical Officer. Evacuation to
+        definitive care takes days, not hours. NASA's IMPACT tool ran
+        <strong>100,000 probabilistic simulations</strong> of this mission
+        to estimate medical risk — loss of crew life, need for evacuation,
+        crew task time lost — and to recommend a medical capability set
+        within hard mass and volume constraints.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- DRM -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">Design Reference Mission — Long Duration Lunar Orbit &amp; Lunar Surface</span>
+      <span class="viz__note">Per IMPACT LDLOLS DRM · NTRS 20220015633</span>
+    </div>
+    <div class="viz__body">
+      <div class="drm">
+        <div class="drm__cell"><span class="drm__num">275</span><span class="drm__label">DAYS MAX — LEVEL OF CARE IV</span></div>
+        <div class="drm__cell"><span class="drm__num">2+2</span><span class="drm__label">CREW — MALE + FEMALE</span></div>
+        <div class="drm__cell"><span class="drm__num">3mo</span><span class="drm__label">ON THE LUNAR SURFACE</span></div>
+        <div class="drm__cell"><span class="drm__num">4–8</span><span class="drm__label">EVAS / MONTH ON SURFACE (PRESS. + UNPRESS.)</span></div>
+        <div class="drm__cell"><span class="drm__num">MD</span><span class="drm__label">PHYSICIAN-LEVEL CREW MEDICAL OFFICER</span></div>
+      </div>
+      <div class="mtl">
+        <div class="mtl__bar">
+          <div class="mtl__seg mtl__seg--orbit1">LUNAR ORBIT — NO EVAS</div>
+          <div class="mtl__seg mtl__seg--surface">LUNAR SURFACE — EVA OPS</div>
+          <div class="mtl__seg mtl__seg--orbit2">LUNAR ORBIT — RETURN</div>
+        </div>
+        <div class="mtl__legend"><span>MONTH 0</span><span>MISSION PHASES — NOTIONAL</span><span>MONTH 9</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPACT -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">IMPACT — Probabilistic Risk Assessment</span>
+      <span class="viz__note">Outcome magnitudes illustrative — toggle the capability set</span>
+    </div>
+    <div class="viz__body">
+      <span class="sim__count" id="simcount">0</span>
+      <span class="sim__caption">SIMULATED MISSIONS — INFORMING MISSION PLANNING VIA ANALYSIS OF COMPLEX TRADESPACES</span>
+      <div class="simbars">
+        <div class="simbar"><span class="simbar__label">Loss of crew life (LOCL)</span><div class="simbar__track"><div class="simbar__fill" data-hi="62" data-lo="18"></div></div></div>
+        <div class="simbar"><span class="simbar__label">Evacuation — return to definitive care (RTDC)</span><div class="simbar__track"><div class="simbar__fill" data-hi="78" data-lo="30"></div></div></div>
+        <div class="simbar"><span class="simbar__label">Crew task time lost (TTL)</span><div class="simbar__track"><div class="simbar__fill" data-hi="88" data-lo="44"></div></div></div>
+      </div>
+      <div class="simtoggles">
+        <button class="simtog on" id="sim-untreated" type="button">Without treatment capability</button>
+        <button class="simtog" id="sim-treated" type="button">With recommended capability set</button>
+      </div>
+      <div class="simchips" id="simchips">
+        <span>CAPABILITY SET SIZED TO MASS BUDGET</span><span>VOLUME-CONSTRAINED</span><span>FULL DIAGNOSTIC + TREATMENT</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The system behind the system</h2>
+      <div class="case-body">
+        <p>The Foundation is built by two teams in lockstep: systems
+        engineers (systems, biomedical, aerospace, human factors) and the
+        Clinical &amp; Science Team — pharmacists, nurses, and physicians
+        across emergency, internal, family, rehab, and aerospace medicine.
+        Their shared artifact is a SysML model in MagicDraw, stored in
+        Teamwork Cloud, with requirements configuration-managed in Cradle
+        as the source of truth.</p>
+        <p class="pull">Because the model is the single source of truth, the
+        web reports were the only view of it most stakeholders ever had.</p>
+        <p>The mapping effort alone shows the scale: three CST groups
+        re-ordered the requirements into clinical-workflow order, then
+        mapped <strong>700+ clinical capabilities to 80 functional
+        requirements</strong> in reverse — surfacing redundant and orphan
+        requirements along the way. All of it published as HTML reports:
+        one internal (with model-linked commenting), one public on the
+        HRP website.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- MBSE PIPELINE -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">The MBSE Toolchain — and Where the UI Work Sits</span>
+      <span class="viz__note">Per NASA/TM-20230002346</span>
+    </div>
+    <div class="viz__body" style="padding-bottom:1.6rem">
+      <svg class="mbse" viewBox="0 0 920 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ExMC toolchain: clinical content and ConOps feed a SysML model in MagicDraw with requirements managed in Cradle; the model publishes through Cameo Collaborator to internal and public web reports, where the UI architecture work happened">
+        <text class="tag" x="40" y="34">CLINICAL CONTENT — CST</text>
+        <rect class="box" x="40" y="48" width="220" height="74" rx="8"/>
+        <text class="lbl" x="58" y="74">MEDICAL DATABASE</text>
+        <text class="sub" x="58" y="92">conditions → capabilities (700+)</text>
+        <text class="sub" x="58" y="106">→ resources (MEL) · IMPACT inputs</text>
+
+        <text class="tag" x="40" y="180">SYSTEMS ENGINEERING — SE TEAM</text>
+        <rect class="box" x="40" y="194" width="220" height="74" rx="8"/>
+        <text class="lbl" x="58" y="220">CONOPS + SCENARIOS</text>
+        <text class="sub" x="58" y="238">medical scenarios → use cases →</text>
+        <text class="sub" x="58" y="252">functional decomposition (thematic)</text>
+
+        <rect class="box box--accent" x="340" y="110" width="240" height="100" rx="8"/>
+        <text class="lbl" x="358" y="136">SYSML MODEL</text>
+        <text class="sub" x="358" y="154">MagicDraw 19.0 · Teamwork Cloud</text>
+        <text class="sub" x="358" y="168">activity diagrams · context · traces</text>
+        <text class="sub" x="358" y="182">requirements L1–L4 + rationale</text>
+        <text class="sub" x="358" y="196">reviews via model annotations</text>
+
+        <rect class="box" x="340" y="250" width="240" height="58" rx="8"/>
+        <text class="lbl" x="358" y="274">CRADLE</text>
+        <text class="sub" x="358" y="290">requirements source of truth · Excel → CSV loop</text>
+
+        <rect class="box box--accent" x="660" y="48" width="220" height="86" rx="8"/>
+        <text class="lbl" x="678" y="74">INTERNAL WEB REPORT</text>
+        <text class="sub" x="678" y="92">Cameo Collaborator · NDC login</text>
+        <text class="sub" x="678" y="106">reviewer comments linked to model</text>
+
+        <rect class="box box--accent" x="660" y="170" width="220" height="86" rx="8"/>
+        <text class="lbl" x="678" y="196">PUBLIC WEB REPORT</text>
+        <text class="sub" x="678" y="214">Web Publisher 2.0 · HRP website</text>
+        <text class="sub" x="678" y="228">engineers · clinicians · managers</text>
+
+        <rect class="box" x="660" y="296" width="220" height="72" rx="8"/>
+        <text class="lbl" x="678" y="320" fill="#FF5D5D">← UI ARCHITECTURE</text>
+        <text class="sub" x="678" y="338">my layer: IA, navigation, reading</text>
+        <text class="sub" x="678" y="352">experience of both reports</text>
+
+        <path class="wire" d="M260 85 C 300 85, 310 120, 340 135"/>
+        <path class="wire" d="M260 230 C 300 230, 310 195, 340 175"/>
+        <path class="wire" d="M460 250 V 210"/>
+        <path class="wire" d="M580 135 C 620 125, 625 100, 660 91"/>
+        <path class="wire" d="M580 175 C 620 185, 625 200, 660 210"/>
+        <path class="wire" d="M770 256 V 296"/>
+        <path class="wire" d="M770 134 V 170"/>
+      </svg>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The UI problem</h2>
+      <div class="case-body">
+        <p>The model's HTML reports were generated straight from the model's
+        structure — which meant users got the <em>engineer's</em> view:
+        deep trees of SysML packages, dense icon sets, and navigation that
+        leaned on the browser's back button. Clinicians reviewing
+        requirements drowned in information overload; managers couldn't
+        find the ConOps.</p>
+        <p class="pull">A clinician opened the report and saw a SysML package
+        tree when she was looking for a patient scenario. Closing that
+        distance was the redesign.</p>
+        <p>The strategy came from two classics — <strong>Jakob's Law</strong>
+        (users spend most of their time on other sites; meet their existing
+        habits) and <strong>Shneiderman's mantra</strong> (overview first,
+        zoom and filter, details on demand). I restructured the reports to
+        read like the documents NASA stakeholders already live in: a
+        simplified landing page routing each audience, breadcrumb
+        navigation replacing the back button, and a standardized, minimal
+        icon set (Material Design, later Apache) to cut visual clutter —
+        all built so the MBSE team could maintain it without a designer
+        on staff.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BEFORE / AFTER -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">The Model Report — Before / After</span>
+      <span class="viz__note">Interactive recreation · try the accordions in "after"</span>
+    </div>
+    <div class="viz__body">
+      <div class="batoggles" role="tablist" aria-label="Before and after states">
+        <button class="batog on" data-state="before" type="button">Before — model dump</button>
+        <button class="batog" data-state="after" type="button">After — document-first</button>
+      </div>
+      <div class="browser">
+        <div class="browser__bar">
+          <span class="browser__dots"><span></span><span></span><span></span></span>
+          <span class="browser__url" id="burl">…/collaborator/document/model?view=containment&amp;node=8842#deep-link-9</span>
+        </div>
+        <div class="browser__body" id="bbody"></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>Traceability, made legible</h2>
+      <div class="case-body">
+        <p>Every requirement in the Foundation carries a rationale, with
+        traces running from NASA standards down to specific clinical
+        conditions. The UI's job was to make that chain easy to follow:</p>
+        <div class="trtabs" style="margin-top:1.4rem">
+          <button class="batog on" data-tr="func" type="button">Functional</button>
+          <button class="batog" data-tr="iface" type="button">Interface</button>
+        </div>
+        <div class="trchain" id="trchain"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The outcome</h2>
+      <div class="case-body">
+        <div class="outcomes">
+          <div class="outcome"><span class="outcome__num">700+</span><span class="outcome__label mono">CAPABILITIES MAPPED TO 80 FUNCTIONAL REQUIREMENTS</span></div>
+          <div class="outcome"><span class="outcome__num">100K</span><span class="outcome__label mono">IMPACT SIMULATIONS INFORMING THE SYSTEM</span></div>
+          <div class="outcome"><span class="outcome__num">FY22</span><span class="outcome__label mono">FOUNDATION DELIVERED — OMB MILESTONE TO HRP</span></div>
+        </div>
+        <p style="margin-top:2rem">The Long Duration Foundation was vetted
+        through the ExMC Control Board and presented across JSC's medical
+        boards (MOG, SMOCB, HRPCB) — with the web reports as the vehicle
+        stakeholders actually reviewed, comment threads anchored directly
+        to model elements. The reports went into review as the working
+        interface, and the redesign was kept simple enough for the MBSE
+        team to maintain without a designer on staff.</p>
+        <p>The hardest constraint was also the most ordinary: the MBSE team
+        had to keep the interface running after the designer was gone.
+        Building for that is why it outlived the engagement.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="case-next">
+    <span class="k mono">NEXT CASE STUDY — 04 / 07</span>
+    <a class="case-next__link" href="convergent-aeronautics.html">Convergent Aeronautics Solutions →</a>
+  </section>
+</main>
+
+<p class="case-disclaimer mono">CONTENT BASED ON NASA/TM-20230002346 (LONG DURATION FOUNDATION), NTRS 20220015633 (IMPACT LDLOLS OUTPUTS), AND THE AUTHOR'S MBSE UI CASE STUDY. REPORT MOCKUPS ARE RECREATIONS; IMPACT BAR MAGNITUDES ARE ILLUSTRATIVE, NOT PUBLISHED VALUES.</p>
+
+<footer class="footer">
+  <p class="mono">© 2026 MATTHEW GARVIN · <a href="https://vinsettastudio.com/" target="_blank" rel="noopener">DESIGNED BY VINSETTA STUDIO LLC</a></p>
+  <div class="footer__links mono">
+    <a href="https://www.linkedin.com/in/matthew-garvin-7260724a/" target="_blank" rel="noopener">LINKEDIN</a>
+    <a href="https://github.com/mtthwgrvn" target="_blank" rel="noopener">GITHUB</a>
+    <a href="https://mtthwx.com" target="_blank" rel="noopener">BLOG</a>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="js/main.js"></script>
+<script>
+(function () {
+  /* ---------- IMPACT sim ---------- */
+  var treated = false;
+  function simRender() {
+    document.querySelectorAll('.simbar__fill').forEach(function (f) {
+      f.style.width = f.getAttribute(treated ? 'data-lo' : 'data-hi') + '%';
+    });
+    document.getElementById('sim-untreated').classList.toggle('on', !treated);
+    document.getElementById('sim-treated').classList.toggle('on', treated);
+    document.getElementById('simchips').classList.toggle('show', treated);
+  }
+  document.getElementById('sim-untreated').addEventListener('click', function () { treated = false; simRender(); });
+  document.getElementById('sim-treated').addEventListener('click', function () { treated = true; simRender(); });
+  simRender();
+
+  /* counter to 100,000 */
+  var countEl = document.getElementById('simcount');
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function fmt(n) { return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  if (reduced || typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
+    countEl.textContent = '100,000';
+  } else {
+    var obj = { v: 0 };
+    gsap.to(obj, {
+      v: 100000, duration: 2, ease: 'power2.out',
+      scrollTrigger: { trigger: countEl, start: 'top 88%' },
+      onUpdate: function () { countEl.textContent = fmt(obj.v); }
+    });
+  }
+
+  /* ---------- before/after report ---------- */
+  var states = {
+    before: {
+      url: '…/collaborator/document/model?view=containment&node=8842#deep-link-9',
+      html:
+        '<div class="rb-tree">' +
+        '<div class="lvl1"><span class="ic">▸ ▣</span>Model :: LDF_LOC-IV_LunarOrbit_LunarSurface_v1.0</div>' +
+        '<div class="lvl2"><span class="ic">▾ ▤</span>01_Packages <span class="rb-flag">12 LEVELS DEEP</span></div>' +
+        '<div class="lvl3"><span class="ic">▾ ◈</span>SysML_Stereotypes_AppliedProfile_REV3</div>' +
+        '<div class="lvl4"><span class="ic">▸ ⬚</span>«block» MedSys_Context_BDD_v7_FINAL_old</div>' +
+        '<div class="lvl4"><span class="ic">▸ ⬚</span>«requirement» REQ-L4-067_rev12(2)(copy)</div>' +
+        '<div class="lvl5"><span class="ic">▸ ◌</span>TraceMatrix_Capabilities_Export_0322 <span class="rb-flag">WHICH ONE?</span></div>' +
+        '<div class="lvl3"><span class="ic">▸ ◈</span>02_ConOps_DO_NOT_EDIT</div>' +
+        '<div class="lvl3"><span class="ic">▸ ◈</span>03_ConOps_WORKING_USE_THIS_ONE</div>' +
+        '<div class="lvl2"><span class="ic">▸ ▤</span>ZZ_Archive_pre-FY21</div>' +
+        '<div class="lvl1" style="margin-top:0.9rem;color:var(--accent)">⚠ NAVIGATION: BROWSER BACK BUTTON ONLY <span class="rb-flag">DEAD END</span></div>' +
+        '</div>'
+    },
+    after: {
+      url: 'hrp.nasa.gov/exmc/foundation/conops/scenario-07',
+      html:
+        '<div class="ra-crumbs"><a href="#" onclick="return false">Foundation Home</a> / <a href="#" onclick="return false">Concept of Operations</a> / Scenario 07</div>' +
+        '<div class="ra-doc">' +
+        '<h3>Scenario 07 — Ankle injury during unpressurized surface EVA</h3>' +
+        '<p>Crewmember experiences an inversion injury 2.1 km from the habitat. This scenario traces the activities, functions, and requirements involved in diagnosis and treatment at Level of Care IV.</p>' +
+        '<details><summary>Activities &amp; functions</summary><div>Assess injury → stabilize for translation → imaging (ultrasound) → treatment plan with ground consult (delayed comms). Functions: "Inform decisions on crew health actions," "Prompt crew."</div></details>' +
+        '<details><summary>Requirements traced — <span class="req-id">REQ-L4-067</span></summary><div><span class="req-id">REQ-L4-067</span>: The medical system shall provide the capability to image musculoskeletal injuries. <em>Rationale:</em> traced to conditions (ankle sprain/fracture) and NASA-STD-3001 V1.</div></details>' +
+        '<details><summary>Clinical capabilities &amp; resources</summary><div>Capabilities: medical imaging, wound care. Resources: ultrasound device, analgesics, sonography KSA (physician-level CMO).</div></details>' +
+        '</div>'
+    }
+  };
+  var burl = document.getElementById('burl'), bbody = document.getElementById('bbody');
+  function baRender(s) {
+    burl.innerHTML = states[s].url;
+    bbody.innerHTML = states[s].html;
+  }
+  document.querySelectorAll('.batog[data-state]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.batog[data-state]').forEach(function (b) { b.classList.remove('on'); });
+      btn.classList.add('on');
+      baRender(btn.getAttribute('data-state'));
+    });
+  });
+  baRender('before');
+
+  /* ---------- trace chain ---------- */
+  var traces = {
+    func: [
+      { k: 'L1 — NASA STANDARD', p: 'NASA-STD-3001 Vol 1/2 — crew health standard, imported into the model' },
+      { k: 'L2/3 — PARENT REQS', p: 'Representative Program &amp; Habitat requirements (pre-Gateway, Level of Care IV)' },
+      { k: 'L4 — FUNCTIONAL REQ', p: '"Inform decisions on crew health actions" — with rationale statement' },
+      { k: 'CLINICAL CAPABILITY', p: 'Medical imaging · periodic physical exams · private medical conference' },
+      { k: 'CONDITION + RESOURCE', p: 'Condition list (Medical Database) → ultrasound device, sonography KSA' }
+    ],
+    iface: [
+      { k: 'CLINICAL NEED', p: 'Crew health maintenance requires medical suction capability' },
+      { k: 'MEDICAL CAPABILITY', p: 'Suction traced in the model to the conditions that demand it' },
+      { k: 'ALLOCATION DECISION', p: 'Vehicle structures system already provides vacuum — don’t duplicate' },
+      { k: 'L4 — INTERFACE REQ', p: 'Requirement allocated to structures, tracked as a medical interface requirement' },
+      { k: 'INTERFACE DIAGRAM', p: 'Visualized interface points between medical system and host vehicle' }
+    ]
+  };
+  var trchain = document.getElementById('trchain');
+  function trRender(key) {
+    trchain.innerHTML = traces[key].map(function (n) {
+      return '<div class="trnode"><span class="k">' + n.k + '</span><p>' + n.p + '</p></div>';
+    }).join('');
+  }
+  document.querySelectorAll('.batog[data-tr]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.batog[data-tr]').forEach(function (b) { b.classList.remove('on'); });
+      btn.classList.add('on');
+      trRender(btn.getAttribute('data-tr'));
+    });
+  });
+  trRender('func');
+
+  /* ---------- reveals ---------- */
+  if (!reduced && typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+    document.querySelectorAll('.viz, .drm__cell, .trnode, .browser').forEach(function (el) {
+      gsap.from(el, {
+        opacity: 0, y: 24, duration: 0.7, ease: 'power3.out',
+        scrollTrigger: { trigger: el, start: 'top 92%' }
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>

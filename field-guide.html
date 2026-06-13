@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- The Innovation Research Field Guide — a standalone resource.
+     De-branded and repurposed from a private research-program strategy doc.
+     Self-contained: own design system (does not share the portfolio's tokens). -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Innovation Research Field Guide — Plays, Methods &amp; Outputs</title>
+<meta name="description" content="A field guide to building a scalable research practice: 63 research plays across seven contribution types, with the systems, methods, and process to run them.">
+<meta name="color-scheme" content="light">
+<meta property="og:title" content="The Innovation Research Field Guide">
+<meta property="og:description" content="Plays, methods &amp; outputs for building a scalable research practice.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,400&family=Fraunces:ital,opsz,wght@1,9..144,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   THE INNOVATION RESEARCH FIELD GUIDE — standalone design system
+   Archival "field guide": warm paper, ink, serif display + mono labels.
+   ============================================================ */
+:root {
+  --paper:   #f4efe6;
+  --paper-2: #ece4d6;   /* recessed panels / specimen cards */
+  --ink:     #1c1813;
+  --ink-2:   #574e44;   /* muted body — ~6.6:1 on --paper */
+  --rust:    #a23c22;   /* accent — ~5.4:1 on --paper */
+  --rust-deep:#7e2e19;
+  --line:    rgba(28, 24, 19, 0.18);
+  --line-2:  rgba(28, 24, 19, 0.10);
+  --serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --mono:  "IBM Plex Mono", ui-monospace, monospace;
+  --pad: clamp(1.15rem, 5vw, 5.5rem);
+  --maxw: 1280px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(1rem, 0.97rem + 0.2vw, 1.08rem);
+  line-height: 1.62;
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  /* faint paper tint gradient */
+  background-image:
+    radial-gradient(120% 80% at 100% 0%, rgba(162,60,34,0.05), transparent 55%),
+    radial-gradient(80% 60% at 0% 100%, rgba(28,24,19,0.04), transparent 50%);
+  background-attachment: fixed;
+}
+::selection { background: var(--rust); color: var(--paper); }
+a { color: inherit; text-decoration: none; }
+img, svg, canvas { display: block; max-width: 100%; }
+
+.mono { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; }
+.wrap { max-width: var(--maxw); margin: 0 auto; }
+
+:focus-visible { outline: 2px solid var(--rust); outline-offset: 3px; border-radius: 2px; }
+
+.skip-link {
+  position: fixed; top: 0; left: 0; z-index: 200;
+  transform: translateY(-130%);
+  background: var(--ink); color: var(--paper);
+  padding: 0.8rem 1.3rem;
+  font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
+  transition: transform 0.2s ease;
+}
+.skip-link:focus { transform: translateY(0); }
+
+/* fine grain to break up the flat paper */
+.grain {
+  position: fixed; inset: 0; pointer-events: none; z-index: 150; opacity: 0.4;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+/* ============ NAV ============ */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 0.9rem var(--pad);
+  background: color-mix(in srgb, var(--paper) 86%, transparent);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+.nav__brand { display: flex; align-items: baseline; gap: 0.6rem; }
+.nav__brand b { font-family: var(--serif); font-weight: 600; font-size: 1.05rem; letter-spacing: 0.01em; }
+.nav__brand span { color: var(--ink-2); }
+.nav__links { display: flex; gap: 1.6rem; align-items: center; }
+.nav__links a { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); position: relative; }
+.nav__links a:hover { color: var(--ink); }
+.nav__links a::after { content: ""; position: absolute; left: 0; bottom: -3px; width: 100%; height: 1px; background: var(--rust); transform: scaleX(0); transform-origin: right; transition: transform 0.3s ease; }
+.nav__links a:hover::after { transform: scaleX(1); transform-origin: left; }
+.nav__cta { padding: 0.5rem 1rem; border: 1px solid var(--ink); border-radius: 999px; color: var(--ink) !important; }
+.nav__cta:hover { background: var(--ink); color: var(--paper) !important; }
+.nav__cta::after { display: none; }
+@media (max-width: 720px) { .nav__links a:not(.nav__cta) { display: none; } }
+
+/* ============ shared section frame ============ */
+.section { padding: clamp(3.5rem, 8vw, 7rem) var(--pad); }
+.section--rule { border-top: 1px solid var(--line); }
+.eyebrow { display: flex; align-items: center; gap: 0.7rem; color: var(--rust); margin-bottom: 1.4rem; }
+.eyebrow::before { content: ""; width: 26px; height: 1px; background: var(--rust); display: inline-block; }
+.h2 { font-family: var(--serif); font-weight: 500; font-size: clamp(1.8rem, 4.5vw, 3.2rem); line-height: 1.06; letter-spacing: -0.015em; max-width: 18ch; }
+.lede { color: var(--ink-2); max-width: 46ch; margin-top: 1.2rem; font-size: clamp(1.02rem, 1.4vw, 1.18rem); }
+
+/* ============ HERO ============ */
+.hero { position: relative; padding: clamp(3rem, 7vw, 6rem) var(--pad) clamp(3rem, 6vw, 5rem); overflow: hidden; }
+.hero__grid { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: clamp(1.5rem, 4vw, 3.5rem); align-items: center; }
+.hero__eyebrow { color: var(--rust); margin-bottom: 1.6rem; }
+.hero__title { font-family: var(--serif); font-weight: 500; font-size: clamp(2.6rem, 9vw, 6.6rem); line-height: 0.98; letter-spacing: -0.025em; }
+.hero__title .line { display: block; overflow: hidden; }
+.hero__title .line > span { display: inline-block; will-change: transform; }
+.hero__title em { font-style: italic; color: var(--rust); }
+.hero__rule { width: clamp(80px, 18vw, 220px); height: 2px; background: var(--rust); margin: 1.8rem 0; }
+.hero__sub { color: var(--ink-2); max-width: 40ch; font-size: clamp(1.05rem, 1.5vw, 1.25rem); }
+.hero__cta { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 2.2rem; }
+.btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 1.6rem; border-radius: 999px; font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; border: 1px solid var(--ink); transition: background 0.25s, color 0.25s, transform 0.25s, border-color 0.25s; }
+.btn--solid { background: var(--ink); color: var(--paper); }
+.btn--solid:hover { background: var(--rust); border-color: var(--rust); transform: translateY(-2px); }
+.btn--ghost { color: var(--ink); }
+.btn--ghost:hover { border-color: var(--rust); color: var(--rust); }
+.hero__plate { position: relative; aspect-ratio: 1 / 1; border: 1px solid var(--line); border-radius: 6px; background: var(--paper-2); overflow: hidden; }
+.hero__plate canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hero__plate .plate__cap { position: absolute; left: 0.9rem; bottom: 0.8rem; right: 0.9rem; display: flex; justify-content: space-between; color: var(--ink-2); pointer-events: none; }
+.hero__plate .plate__corner { position: absolute; top: 0.8rem; right: 0.9rem; color: var(--rust); }
+@media (max-width: 880px) {
+  .hero__grid { grid-template-columns: 1fr; }
+  .hero__plate { max-width: 360px; margin-top: 0.5rem; }
+}
+
+/* ============ MARQUEE ============ */
+.marquee { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 0.7rem 0; overflow: hidden; white-space: nowrap; background: var(--paper-2); }
+.marquee__track { display: inline-block; will-change: transform; color: var(--ink-2); font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; }
+.marquee__track span { padding: 0 1.1rem; }
+.marquee__track b { color: var(--rust); font-weight: 500; }
+
+/* ============ SHIFT statement ============ */
+.shift__statement { font-family: var(--serif); font-weight: 400; font-size: clamp(1.5rem, 4vw, 3rem); line-height: 1.2; letter-spacing: -0.01em; max-width: 24ch; }
+.shift__statement em { font-style: italic; color: var(--rust); }
+.split .w { display: inline-block; }
+html.motion .split .w { opacity: 0.2; transition: opacity 0.5s ease; }
+html.motion .split.in .w { opacity: 1; }
+
+/* ============ PILLARS ============ */
+.pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: clamp(2rem, 4vw, 3rem); }
+.pillar { background: var(--paper); padding: clamp(1.4rem, 2.5vw, 2.2rem); }
+.pillar__no { color: var(--rust); margin-bottom: 0.8rem; }
+.pillar__title { font-family: var(--serif); font-weight: 600; font-size: 1.3rem; margin-bottom: 1rem; }
+.pillar ul { list-style: none; }
+.pillar li { padding: 0.8rem 0; border-top: 1px solid var(--line-2); }
+.pillar li:first-child { border-top: none; }
+.pillar li b { display: block; font-weight: 600; }
+.pillar li span { color: var(--ink-2); font-size: 0.92rem; }
+@media (max-width: 820px) { .pillars { grid-template-columns: 1fr; } }
+
+/* ============ METHODS ============ */
+.methods { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: clamp(2rem, 4vw, 3rem); }
+.method { background: var(--paper); padding: 1.6rem 1.4rem 1.9rem; transition: background 0.3s; }
+.method:hover { background: var(--paper-2); }
+.method__no { color: var(--rust); }
+.method__title { font-family: var(--serif); font-weight: 600; font-size: 1.1rem; margin: 0.6rem 0 0.5rem; }
+.method p { color: var(--ink-2); font-size: 0.9rem; }
+
+/* ============ PROCESS ============ */
+.phases { margin-top: clamp(2rem, 4vw, 3rem); border-top: 1px solid var(--line); }
+.phase { display: grid; grid-template-columns: 3.5rem 1fr 9rem; gap: 1.2rem; align-items: baseline; padding: 1.5rem 0; border-bottom: 1px solid var(--line); }
+.phase__no { font-family: var(--mono); color: var(--rust); font-size: 0.8rem; }
+.phase__title { font-family: var(--serif); font-weight: 600; font-size: clamp(1.1rem, 2vw, 1.4rem); }
+.phase__title + p { color: var(--ink-2); font-size: 0.92rem; margin-top: 0.3rem; }
+.phase__dur { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); text-align: right; }
+@media (max-width: 720px) { .phase { grid-template-columns: 2.4rem 1fr; } .phase__dur { grid-column: 2; text-align: left; margin-top: 0.4rem; } }
+
+/* ============ CATALOG (the plays) ============ */
+.cat__head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+.cat__count { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); }
+.cat__count b { color: var(--rust); }
+.filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: clamp(1.6rem, 3vw, 2.2rem) 0; }
+.chip { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.5rem 0.95rem; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--ink-2); cursor: pointer; transition: all 0.2s; }
+.chip:hover { color: var(--ink); border-color: var(--ink); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.chip__n { opacity: 0.6; margin-left: 0.4em; }
+
+.specimens { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: clamp(0.8rem, 1.5vw, 1.1rem); }
+.spec { position: relative; display: flex; flex-direction: column; background: var(--paper-2); border: 1px solid var(--line); border-radius: 5px; padding: 1.3rem 1.3rem 1.2rem; transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s, border-color 0.3s; }
+.spec:hover { transform: translateY(-3px); border-color: var(--rust); box-shadow: 0 10px 30px -18px rgba(28,24,19,0.5); }
+.spec__top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.7rem; }
+.spec__type { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--rust); border: 1px solid var(--rust); border-radius: 999px; padding: 0.25rem 0.6rem; }
+.spec__no { font-family: var(--mono); font-size: 0.66rem; color: var(--ink-2); }
+.spec__title { font-family: var(--serif); font-weight: 600; font-size: 1.18rem; line-height: 1.15; letter-spacing: -0.01em; margin-bottom: 0.9rem; }
+.spec__row { padding: 0.55rem 0; border-top: 1px solid var(--line-2); }
+.spec__k { font-family: var(--mono); font-size: 0.56rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); display: block; margin-bottom: 0.2rem; }
+.spec__v { font-size: 0.9rem; line-height: 1.45; }
+.spec__foot { display: flex; align-items: baseline; justify-content: space-between; gap: 0.8rem; margin-top: auto; padding-top: 0.9rem; border-top: 1px solid var(--line-2); }
+.spec__cost { font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.05em; color: var(--rust); }
+.spec__cost .dim { color: var(--line); }
+.spec__impact { font-style: italic; color: var(--ink-2); font-size: 0.82rem; text-align: right; }
+.cat__empty { color: var(--ink-2); font-style: italic; padding: 2rem 0; }
+
+/* ============ METRICS ============ */
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: clamp(2rem, 4vw, 3rem); }
+.metric { background: var(--paper); padding: 1.8rem 1.4rem; }
+.metric__n { font-family: var(--serif); font-weight: 600; font-size: clamp(2.2rem, 5vw, 3.4rem); line-height: 1; color: var(--rust); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.metric__l { display: block; margin-top: 0.7rem; font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); }
+@media (max-width: 760px) { .metrics { grid-template-columns: 1fr 1fr; } }
+.track { margin-top: 2rem; columns: 2; column-gap: 2.5rem; max-width: 60rem; }
+.track li { break-inside: avoid; padding: 0.5rem 0 0.5rem 1.4rem; position: relative; color: var(--ink-2); list-style: none; }
+.track li::before { content: "→"; position: absolute; left: 0; color: var(--rust); }
+@media (max-width: 600px) { .track { columns: 1; } }
+
+/* ============ ROADMAP ============ */
+.road { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: clamp(2rem, 4vw, 3rem); counter-reset: mile; }
+.mile { background: var(--paper); padding: 1.6rem 1.3rem 1.9rem; position: relative; }
+.mile__ph { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--rust); margin-bottom: 0.6rem; }
+.mile__title { font-family: var(--serif); font-weight: 600; font-size: 1.12rem; margin-bottom: 0.5rem; }
+.mile p { color: var(--ink-2); font-size: 0.88rem; }
+@media (max-width: 820px) { .road { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px) { .road { grid-template-columns: 1fr; } }
+
+/* ============ PUBLISH ============ */
+.pub { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(1.5rem, 3vw, 3rem); margin-top: clamp(2rem, 4vw, 3rem); }
+.pub h3 { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); padding-bottom: 0.8rem; border-bottom: 1px solid var(--line); margin-bottom: 0.4rem; }
+.pub ul { list-style: none; }
+.pub li { border-bottom: 1px solid var(--line-2); }
+.pub a { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; padding: 0.7rem 0; color: var(--ink); transition: color 0.2s, padding-left 0.25s; }
+.pub a:hover { color: var(--rust); padding-left: 0.4rem; }
+.pub a .arr { color: var(--rust); }
+@media (max-width: 760px) { .pub { grid-template-columns: 1fr; } }
+
+/* ============ FORM ============ */
+.guide { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: clamp(2rem, 5vw, 5rem); align-items: start; }
+.lead { background: var(--paper-2); border: 1px solid var(--line); border-radius: 6px; padding: clamp(1.4rem, 3vw, 2.2rem); }
+.field { margin-bottom: 1.1rem; }
+.field label { display: block; font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 0.45rem; }
+.field input, .field textarea { width: 100%; background: var(--paper); border: 1px solid var(--line); border-radius: 4px; padding: 0.75rem 0.9rem; font-family: var(--serif); font-size: 1rem; color: var(--ink); transition: border-color 0.2s; }
+.field input:focus, .field textarea:focus { border-color: var(--rust); outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--rust) 22%, transparent); }
+.field textarea { resize: vertical; min-height: 110px; }
+.field .req { color: var(--rust); }
+.form-status { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; margin-top: 0.6rem; min-height: 1.3em; }
+.form-status[data-state="ok"] { color: var(--rust-deep); }
+.form-status[data-state="err"] { color: #9e2a2a; }
+.lead button { width: 100%; margin-top: 0.3rem; cursor: pointer; justify-content: center; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+/* ============ FOOTER ============ */
+.footer { border-top: 1px solid var(--line); padding: 2rem var(--pad); display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; color: var(--ink-2); }
+.footer a:hover { color: var(--rust); }
+.footer__links { display: flex; gap: 1.4rem; }
+
+/* ============ reveal / motion ============ */
+html.motion .reveal { opacity: 0; transform: translateY(14px); }
+html.motion .reveal.in { opacity: 1; transform: none; transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22,1,0.36,1); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+  .marquee__track { transform: none !important; }
+  html.motion .reveal, html.motion .split .w { opacity: 1 !important; transform: none !important; }
+}
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#catalog">Skip to the plays</a>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="nav">
+  <a class="nav__brand" href="#top" aria-label="The Innovation Research Field Guide — home">
+    <b>The Field&nbsp;Guide</b><span class="mono">№ 01–63</span>
+  </a>
+  <nav class="nav__links" aria-label="Primary">
+    <a href="#framework">Framework</a>
+    <a href="#catalog">The Plays</a>
+    <a href="#publish">Publish</a>
+    <a class="nav__cta" href="#guide">Get the guide</a>
+  </nav>
+</header>
+
+<main id="top">
+
+  <!-- ===================== HERO ===================== -->
+  <section class="hero">
+    <div class="wrap hero__grid">
+      <div>
+        <p class="hero__eyebrow mono">The Innovation Research Field Guide</p>
+        <h1 class="hero__title">
+          <span class="line"><span>Plays, Methods</span></span>
+          <span class="line"><span>&amp; <em>Outputs</em>.</span></span>
+        </h1>
+        <div class="hero__rule" aria-hidden="true"></div>
+        <p class="hero__sub">A practical guide to turning opportunistic, one-off
+        research into a scalable practice — sixty-three field-tested plays, the
+        systems that hold them, and the process to ship them.</p>
+        <div class="hero__cta">
+          <a class="btn btn--solid" href="#catalog">Browse the plays</a>
+          <a class="btn btn--ghost" href="#framework">See the framework</a>
+        </div>
+      </div>
+      <figure class="hero__plate" aria-hidden="true">
+        <canvas id="plate"></canvas>
+        <span class="plate__corner mono">Pl. I</span>
+        <span class="plate__cap mono"><span>SPECIMEN PLATE</span><span>FIG. 1 — THE PRACTICE</span></span>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ===================== MARQUEE ===================== -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee__track" id="marquee"></div>
+  </div>
+
+  <!-- ===================== THE SHIFT ===================== -->
+  <section class="section section--rule" id="framework">
+    <div class="wrap">
+      <p class="eyebrow mono">01 — The Shift</p>
+      <p class="shift__statement split">Research is not a cost center that ends with a report. It is a <em>practice</em> — a repeatable engine that turns each study into reusable assets, sharper proposals, and durable credibility.</p>
+    </div>
+  </section>
+
+  <!-- ===================== PILLARS ===================== -->
+  <section class="section section--rule">
+    <div class="wrap">
+      <p class="eyebrow mono">02 — The Three Pillars</p>
+      <h2 class="h2">What you build so the work can scale.</h2>
+      <div class="pillars reveal">
+        <div class="pillar">
+          <p class="pillar__no mono">Pillar i</p>
+          <h3 class="pillar__title">Systems</h3>
+          <ul>
+            <li><b>ResearchOps</b><span>Templates for briefs, protocols, and lightweight ethics checklists that manage the study pipeline.</span></li>
+            <li><b>Knowledge management</b><span>A central, tagged research library — findings you can retrieve and reuse, not scatter.</span></li>
+            <li><b>Data infrastructure</b><span>Standardized sources and documented provenance; automate the pulls you repeat.</span></li>
+            <li><b>Marketing integration</b><span>A publication calendar that converts outputs into business-development assets.</span></li>
+          </ul>
+        </div>
+        <div class="pillar">
+          <p class="pillar__no mono">Pillar ii</p>
+          <h3 class="pillar__title">Tools</h3>
+          <ul>
+            <li><b>Modeling &amp; data science</b><span>Python, spatial analysis, life-cycle and techno-economic modeling, predictive models.</span></li>
+            <li><b>Version control</b><span>Private repos for research artifacts and code; reproducibility by default.</span></li>
+            <li><b>Automation</b><span>Scripts and API connections that cut manual data wrangling.</span></li>
+            <li><b>Publishing</b><span>Design and BI tooling for client-facing reports, dashboards, and infographics.</span></li>
+          </ul>
+        </div>
+        <div class="pillar">
+          <p class="pillar__no mono">Pillar iii</p>
+          <h3 class="pillar__title">Processes</h3>
+          <ul>
+            <li><b>Proposal workflow</b><span>A boilerplate that makes scoping documents fast and consistent.</span></li>
+            <li><b>Research sprints</b><span>Time-boxed cycles that give delivery a predictable cadence.</span></li>
+            <li><b>Peer review &amp; QA</b><span>An internal checklist that keeps quality and consistency high.</span></li>
+            <li><b>Post-project debriefs</b><span>Captured lessons that compound into institutional knowledge.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CORE METHODS ===================== -->
+  <section class="section section--rule">
+    <div class="wrap">
+      <p class="eyebrow mono">03 — Core Methods</p>
+      <h2 class="h2">The technical range behind the plays.</h2>
+      <div class="methods reveal">
+        <div class="method"><p class="method__no mono">M1</p><h3 class="method__title">Data science &amp; statistics</h3><p>Regression and time-series forecasting; machine learning for optimization and segmentation.</p></div>
+        <div class="method"><p class="method__no mono">M2</p><h3 class="method__title">Life-cycle &amp; techno-economic</h3><p>Impact assessment, life-cycle costing, systems modeling, levelized cost and cost-of-ownership.</p></div>
+        <div class="method"><p class="method__no mono">M3</p><h3 class="method__title">GIS &amp; spatial analysis</h3><p>Site suitability, equity overlays, and spatial clustering across a service territory.</p></div>
+        <div class="method"><p class="method__no mono">M4</p><h3 class="method__title">Human-systems &amp; UX</h3><p>Usability and human-in-the-loop testing — from interfaces to cyber-physical systems.</p></div>
+        <div class="method"><p class="method__no mono">M5</p><h3 class="method__title">Knowledge management</h3><p>Information architecture, taxonomies, schemas, and metadata strategy.</p></div>
+        <div class="method"><p class="method__no mono">M6</p><h3 class="method__title">Speculative &amp; scenario</h3><p>Futures and foresight — the move that turns an assessment into a prospective one.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PROCESS ===================== -->
+  <section class="section section--rule">
+    <div class="wrap">
+      <p class="eyebrow mono">04 — The Process</p>
+      <h2 class="h2">One repeatable cycle, intake to handoff.</h2>
+      <div class="phases reveal">
+        <div class="phase"><span class="phase__no">01</span><div><div class="phase__title">Question intake &amp; scoping</div><p>Rapid feasibility scan: data availability and preliminary model outlines.</p></div><span class="phase__dur">1–2 weeks</span></div>
+        <div class="phase"><span class="phase__no">02</span><div><div class="phase__title">Data assembly &amp; build</div><p>Ingest data; prototype, iterate, and refine the model.</p></div><span class="phase__dur">3–5 weeks</span></div>
+        <div class="phase"><span class="phase__no">03</span><div><div class="phase__title">Analysis &amp; validation</div><p>Review, sensitivity checks, and stakeholder walkthroughs.</p></div><span class="phase__dur">2 weeks</span></div>
+        <div class="phase"><span class="phase__no">04</span><div><div class="phase__title">Delivery &amp; knowledge capture</div><p>Final report and dashboard, catalogued to the repository; a share-out to socialize the technique.</p></div><span class="phase__dur">1 week</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CATALOG ===================== -->
+  <section class="section section--rule" id="catalog">
+    <div class="wrap">
+      <div class="cat__head">
+        <div>
+          <p class="eyebrow mono">05 — The Plays</p>
+          <h2 class="h2">Sixty-three ways to make a contribution.</h2>
+        </div>
+        <p class="cat__count" id="catCount" role="status" aria-live="polite"></p>
+      </div>
+      <div class="filters" id="filters" role="group" aria-label="Filter plays by contribution type"></div>
+      <div class="specimens" id="specimens" aria-live="polite"></div>
+      <p class="cat__empty" id="catEmpty" hidden>No plays in this category.</p>
+      <noscript><p class="lede">The interactive catalog needs JavaScript. The seven contribution types are: Empirical, Artifact, Methodological, Theoretical, Benchmark / Dataset, Survey, and Opinion — each a family of research plays with its own methods and outputs.</p></noscript>
+    </div>
+  </section>
+
+  <!-- ===================== METRICS ===================== -->
+  <section class="section section--rule">
+    <div class="wrap">
+      <p class="eyebrow mono">06 — What to Measure</p>
+      <h2 class="h2">Proof the practice is growing.</h2>
+      <div class="metrics reveal">
+        <div class="metric"><span class="metric__n" data-count="63">63</span><span class="metric__l">Plays ready to scope</span></div>
+        <div class="metric"><span class="metric__n" data-count="7">7</span><span class="metric__l">Contribution types</span></div>
+        <div class="metric"><span class="metric__n" data-count="6">6</span><span class="metric__l">Core method families</span></div>
+        <div class="metric"><span class="metric__n" data-count="4">4</span><span class="metric__l">Phase delivery cycle</span></div>
+      </div>
+      <ul class="track reveal">
+        <li>Projects completed per year, and time-to-completion by study type.</li>
+        <li>New reusable assets created: datasets, models, and frameworks.</li>
+        <li>Revenue from research-driven contracts.</li>
+        <li>Marketing outputs: reports, white papers, conference submissions.</li>
+        <li>Reproducibility: code and models documented in version control.</li>
+        <li>Adoption: downstream engagements that reuse lab outputs.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===================== ROADMAP ===================== -->
+  <section class="section section--rule">
+    <div class="wrap">
+      <p class="eyebrow mono">07 — The Roadmap</p>
+      <h2 class="h2">Four moves from zero to a practice.</h2>
+      <div class="road reveal">
+        <div class="mile"><p class="mile__ph mono">Phase 0</p><h3 class="mile__title">Establish</h3><p>Name the practice, secure sign-off, and stand up the lightest possible version.</p></div>
+        <div class="mile"><p class="mile__ph mono">Phase 1</p><h3 class="mile__title">Build foundations</h3><p>Launch two pilots from the plays; build the initial tooling and libraries.</p></div>
+        <div class="mile"><p class="mile__ph mono">Phase 2</p><h3 class="mile__title">Systematize</h3><p>Finish the pilots, document the playbooks, and prep findings for reuse.</p></div>
+        <div class="mile"><p class="mile__ph mono">Phase 3</p><h3 class="mile__title">Scale &amp; monetize</h3><p>Automate the workflow and turn outputs into a repeatable revenue line.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PUBLISH ===================== -->
+  <section class="section section--rule" id="publish">
+    <div class="wrap">
+      <p class="eyebrow mono">08 — Where to Publish</p>
+      <h2 class="h2">Turn outputs into reach.</h2>
+      <div class="pub reveal">
+        <div>
+          <h3>Journals</h3>
+          <ul>
+            <li><a href="https://www.sciencedirect.com/journal/energy-research-and-social-science" target="_blank" rel="noopener">Energy Research &amp; Social Science <span class="arr">↗</span></a></li>
+            <li><a href="https://www.sciencedirect.com/journal/renewable-and-sustainable-energy-reviews" target="_blank" rel="noopener">Renewable &amp; Sustainable Energy Reviews <span class="arr">↗</span></a></li>
+            <li><a href="https://www.sciencedirect.com/journal/global-environmental-change" target="_blank" rel="noopener">Global Environmental Change <span class="arr">↗</span></a></li>
+            <li><a href="https://www.sciencedirect.com/journal/journal-of-cleaner-production" target="_blank" rel="noopener">Journal of Cleaner Production <span class="arr">↗</span></a></li>
+            <li><a href="https://www.sciencedirect.com/journal/energy-policy" target="_blank" rel="noopener">Energy Policy <span class="arr">↗</span></a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Conferences</h3>
+          <ul>
+            <li><a href="https://transitionsnetwork.org/" target="_blank" rel="noopener">Intl. Sustainability Transitions (IST) <span class="arr">↗</span></a></li>
+            <li><a href="https://www.aceee.org/events" target="_blank" rel="noopener">ACEEE Conferences <span class="arr">↗</span></a></li>
+            <li><a href="https://beccconference.org/" target="_blank" rel="noopener">Behavior, Energy &amp; Climate Change <span class="arr">↗</span></a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Policy &amp; platforms</h3>
+          <ul>
+            <li><a href="https://www.brookings.edu/topics/climate-energy/" target="_blank" rel="noopener">Brookings — Climate &amp; Energy <span class="arr">↗</span></a></li>
+            <li><a href="https://www.wri.org/insights" target="_blank" rel="noopener">World Resources Institute <span class="arr">↗</span></a></li>
+            <li><a href="https://energyequityproject.org/blog/" target="_blank" rel="noopener">Energy Equity Project <span class="arr">↗</span></a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== GET THE GUIDE (form) ===================== -->
+  <section class="section section--rule" id="guide">
+    <div class="wrap guide">
+      <div>
+        <p class="eyebrow mono">09 — Get the Guide</p>
+        <h2 class="h2">The full field guide, in your inbox.</h2>
+        <p class="lede">Want the complete write-up — every play with cost and impact,
+        the systems checklist, and the proposal templates? Leave your details and
+        we'll send it over.</p>
+      </div>
+      <form class="lead" id="leadForm" novalidate>
+        <div class="field">
+          <label for="lf-name">Name <span class="req" aria-hidden="true">*</span></label>
+          <input id="lf-name" name="name" type="text" autocomplete="name" required aria-required="true">
+        </div>
+        <div class="field">
+          <label for="lf-email">Email <span class="req" aria-hidden="true">*</span></label>
+          <input id="lf-email" name="email" type="email" autocomplete="email" required aria-required="true" aria-describedby="lf-status">
+        </div>
+        <div class="field">
+          <label for="lf-msg">What are you building? <span class="mono" style="text-transform:none;letter-spacing:0">(optional)</span></label>
+          <textarea id="lf-msg" name="message"></textarea>
+        </div>
+        <div class="hp" aria-hidden="true"><label for="lf-company">Company</label><input id="lf-company" name="company" type="text" tabindex="-1" autocomplete="off"></div>
+        <button class="btn btn--solid" type="submit" id="lf-submit">Send it to me</button>
+        <p class="form-status" id="lf-status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <p class="mono">© 2026 Matthew Garvin · <a href="https://vinsettastudio.com/" target="_blank" rel="noopener">Designed by Vinsetta Studio LLC</a></p>
+  <div class="footer__links mono">
+    <a href="https://mtthwx.com" target="_blank" rel="noopener">Portfolio</a>
+    <a href="https://www.linkedin.com/in/matthew-garvin-7260724a/" target="_blank" rel="noopener">LinkedIn</a>
+    <a href="https://github.com/mtthwgrvn" target="_blank" rel="noopener">GitHub</a>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha512-dLxUelApnYxpLt6K2iomGngnHO83iUvZytA3YjDUCjT0HDOHKXnVYdf3hU4JjM8uEhxf9nD1/ey98U3t2vZ0qQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" integrity="sha512-7eHRwcbYkK4d9g/6tD/mhkf++eoTHwpNM9woBxtPUBWm67zeAfFC+HrdoE2GanKeocly/VxeLvIqwvCdk7qScg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" integrity="sha512-onMTRKJBKz8M1TnqqDuGBlowlH0ohFzMXYRNebz+yOcc5TQr/zAKsthzhuv0hiyUKEiQEQXEynnXCvNTOk50dg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="js/plays.js"></script>
+<script>
+(function () {
+  "use strict";
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var PLAYS = window.PLAYS || [];
+
+  /* ---------- type registry ---------- */
+  var TYPES = [
+    { key: "empirical",      label: "Empirical" },
+    { key: "artifact",       label: "Artifact" },
+    { key: "methodological", label: "Methodological" },
+    { key: "theoretical",    label: "Theoretical" },
+    { key: "dataset",        label: "Dataset" },
+    { key: "survey",         label: "Survey" },
+    { key: "opinion",        label: "Opinion" }
+  ];
+  var TYPE_LABEL = {};
+  TYPES.forEach(function (t) { TYPE_LABEL[t.key] = t.label; });
+
+  /* ---------- marquee ---------- */
+  (function () {
+    var el = document.getElementById("marquee");
+    if (!el) return;
+    var items = TYPES.map(function (t) { return "<span><b>·</b> " + t.label + "</span>"; }).join("");
+    el.innerHTML = items + items; // duplicate for seamless loop
+  })();
+
+  /* ---------- catalog ---------- */
+  var grid = document.getElementById("specimens");
+  var countEl = document.getElementById("catCount");
+  var emptyEl = document.getElementById("catEmpty");
+  var filtersEl = document.getElementById("filters");
+  var active = "all";
+
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function costMark(cost) {
+    var n = (cost || "$").length;
+    var filled = "$".repeat(n);
+    var dim = "$".repeat(Math.max(0, 3 - n));
+    return filled + '<span class="dim">' + dim + "</span>";
+  }
+  function pad2(n) { return n < 10 ? "0" + n : "" + n; }
+
+  function render() {
+    var list = active === "all" ? PLAYS : PLAYS.filter(function (p) { return p.type === active; });
+    grid.innerHTML = list.map(function (p, i) {
+      return '<article class="spec reveal">' +
+        '<div class="spec__top">' +
+          '<span class="spec__type">' + escapeHtml(TYPE_LABEL[p.type] || p.type) + "</span>" +
+          '<span class="spec__no">№ ' + pad2(i + 1) + "</span>" +
+        "</div>" +
+        '<h3 class="spec__title">' + escapeHtml(p.title) + "</h3>" +
+        '<div class="spec__row"><span class="spec__k">Method</span><span class="spec__v">' + escapeHtml(p.method) + "</span></div>" +
+        '<div class="spec__row"><span class="spec__k">Output</span><span class="spec__v">' + escapeHtml(p.output) + "</span></div>" +
+        '<div class="spec__foot">' +
+          '<span class="spec__cost" title="Relative cost">' + costMark(p.cost) + "</span>" +
+          '<span class="spec__impact">' + escapeHtml(p.impact) + "</span>" +
+        "</div>" +
+      "</article>";
+    }).join("");
+    countEl.innerHTML = "Showing <b>" + list.length + "</b> of " + PLAYS.length + " plays";
+    emptyEl.hidden = list.length > 0;
+    // re-arm reveals for freshly injected cards
+    if (window.__armReveals) window.__armReveals();
+  }
+
+  function buildFilters() {
+    var counts = { all: PLAYS.length };
+    TYPES.forEach(function (t) { counts[t.key] = PLAYS.filter(function (p) { return p.type === t.key; }).length; });
+    var chips = [{ key: "all", label: "All" }].concat(TYPES);
+    filtersEl.innerHTML = chips.map(function (c) {
+      return '<button type="button" class="chip" data-type="' + c.key + '" aria-pressed="' + (c.key === active) + '">' +
+        escapeHtml(c.label) + '<span class="chip__n">' + (counts[c.key] || 0) + "</span></button>";
+    }).join("");
+    filtersEl.querySelectorAll(".chip").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        active = btn.getAttribute("data-type");
+        filtersEl.querySelectorAll(".chip").forEach(function (b) {
+          b.setAttribute("aria-pressed", b === btn ? "true" : "false");
+        });
+        render();
+      });
+    });
+  }
+
+  if (grid && PLAYS.length) { buildFilters(); render(); }
+
+  /* ---------- reveals (visible by default; motion opt-in) ---------- */
+  if (!reduced && "IntersectionObserver" in window) {
+    document.documentElement.classList.add("motion");
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); }
+      });
+    }, { rootMargin: "0px 0px -8% 0px" });
+    window.__armReveals = function () {
+      document.querySelectorAll(".reveal:not(.in)").forEach(function (el) { io.observe(el); });
+    };
+    window.__armReveals();
+
+    /* split-words statement */
+    document.querySelectorAll(".split").forEach(function (el) {
+      var html = el.innerHTML;
+      // wrap text nodes' words while preserving <em> spans
+      var tmp = document.createElement("div"); tmp.innerHTML = html;
+      function wrap(node) {
+        Array.prototype.slice.call(node.childNodes).forEach(function (n) {
+          if (n.nodeType === 3) {
+            var frag = document.createDocumentFragment();
+            n.nodeValue.split(/(\s+)/).forEach(function (tok) {
+              if (/^\s+$/.test(tok) || tok === "") { frag.appendChild(document.createTextNode(tok)); }
+              else { var s = document.createElement("span"); s.className = "w"; s.textContent = tok; frag.appendChild(s); }
+            });
+            node.replaceChild(frag, n);
+          } else if (n.nodeType === 1) { wrap(n); }
+        });
+      }
+      wrap(tmp);
+      el.innerHTML = tmp.innerHTML;
+      io.observe(el); // .in lights the words
+    });
+  }
+
+  /* ---------- GSAP: hero + count-ups ---------- */
+  if (!reduced && window.gsap) {
+    if (window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
+    gsap.from(".hero__title .line > span", { yPercent: 115, duration: 1.05, stagger: 0.12, ease: "power4.out", delay: 0.1 });
+    gsap.from([".hero__eyebrow", ".hero__rule", ".hero__sub", ".hero__cta"], { opacity: 0, y: 22, duration: 0.85, stagger: 0.1, ease: "power3.out", delay: 0.45 });
+
+    if (window.ScrollTrigger) {
+      var track = document.getElementById("marquee");
+      if (track) gsap.to(track, { xPercent: -50, ease: "none", duration: 30, repeat: -1 });
+
+      document.querySelectorAll("[data-count]").forEach(function (el) {
+        var end = parseInt(el.getAttribute("data-count"), 10) || 0, obj = { v: 0 };
+        el.textContent = "0";
+        gsap.to(obj, {
+          v: end, duration: 1.5, ease: "power2.out",
+          scrollTrigger: { trigger: el, start: "top 88%" },
+          onUpdate: function () { el.textContent = Math.round(obj.v); }
+        });
+      });
+    }
+  }
+
+  /* ---------- hero specimen plate (Three.js, light, subtle) ---------- */
+  (function () {
+    var canvas = document.getElementById("plate");
+    if (!canvas || typeof THREE === "undefined") return;
+    var scene = new THREE.Scene();
+    var cam = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+    cam.position.z = 4.2;
+    var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    var INK = new THREE.Color(0x1c1813), RUST = new THREE.Color(0xa23c22);
+
+    // a loose globe of points — the "specimen"
+    var N = window.innerWidth < 768 ? 520 : 1100;
+    var pos = new Float32Array(N * 3), col = new Float32Array(N * 3);
+    for (var i = 0; i < N; i++) {
+      var u = Math.random(), v = Math.random();
+      var theta = 2 * Math.PI * u, phi = Math.acos(2 * v - 1);
+      var r = 1.55 + (Math.random() - 0.5) * 0.12;
+      pos[i*3] = r * Math.sin(phi) * Math.cos(theta);
+      pos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+      pos[i*3+2] = r * Math.cos(phi);
+      var c = Math.random() < 0.16 ? RUST : INK;
+      col[i*3] = c.r; col[i*3+1] = c.g; col[i*3+2] = c.b;
+    }
+    var geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute("color", new THREE.BufferAttribute(col, 3));
+    var mat = new THREE.PointsMaterial({ size: 0.028, vertexColors: true, transparent: true, opacity: 0.85, sizeAttenuation: true });
+    var pts = new THREE.Points(geo, mat);
+    scene.add(pts);
+
+    // a thin orbit ring
+    var ring = new THREE.Mesh(
+      new THREE.TorusGeometry(1.95, 0.004, 6, 180),
+      new THREE.MeshBasicMaterial({ color: 0xa23c22, transparent: true, opacity: 0.45 })
+    );
+    ring.rotation.x = Math.PI / 2.3;
+    scene.add(ring);
+
+    function resize() {
+      var w = canvas.clientWidth || 360, h = canvas.clientHeight || 360;
+      renderer.setSize(w, h, false);
+      cam.aspect = w / h; cam.updateProjectionMatrix();
+      renderer.render(scene, cam);
+    }
+    window.addEventListener("resize", resize, { passive: true });
+    resize();
+
+    if (reduced) { pts.rotation.y = 0.6; ring.rotation.z = 0.3; renderer.render(scene, cam); return; }
+
+    var running = true;
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (e) { running = e[0].isIntersecting; }).observe(canvas);
+    }
+    var clock = new THREE.Clock();
+    (function tick() {
+      requestAnimationFrame(tick);
+      if (!running) return;
+      var t = clock.getElapsedTime();
+      pts.rotation.y = t * 0.12;
+      pts.rotation.x = Math.sin(t * 0.2) * 0.1;
+      ring.rotation.z = t * 0.18;
+      renderer.render(scene, cam);
+    })();
+  })();
+
+  /* ---------- lead form → n8n ---------- */
+  (function () {
+    var form = document.getElementById("leadForm");
+    if (!form) return;
+    var status = document.getElementById("lf-status");
+    var submit = document.getElementById("lf-submit");
+    var ENDPOINT = "https://flows.vinsettastudio.com/webhook/contact-lead";
+    var MAILTO = "mailto:mtthwgrvn@gmail.com?subject=" + encodeURIComponent("Field Guide request");
+
+    function setStatus(msg, state) { status.textContent = msg; status.setAttribute("data-state", state || ""); }
+    var emailRe = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (form.company && form.company.value) return; // honeypot
+      var name = form.name.value.trim(), email = form.email.value.trim(), message = form.message.value.trim();
+      if (!name) { setStatus("Please add your name.", "err"); form.name.focus(); return; }
+      if (!emailRe.test(email)) { setStatus("Please enter a valid email.", "err"); form.email.focus(); return; }
+
+      submit.disabled = true;
+      setStatus("Sending…", "");
+      fetch(ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name, email: email, message: message, source: "field-guide" })
+      }).then(function (r) {
+        if (!r.ok) throw new Error("bad status " + r.status);
+        setStatus("Sent — check your inbox shortly. Thank you.", "ok");
+        form.reset();
+        status.focus && status.focus();
+      }).catch(function () {
+        setStatus("Couldn't send automatically. Email mtthwgrvn@gmail.com instead.", "err");
+        window.location.href = MAILTO;
+      }).finally(function () { submit.disabled = false; });
+    });
+  })();
+})();
+</script>
+</body>
+</html>

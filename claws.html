@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- ATLAS case study — rebuilt from CLAWS 2020 NASA SUITS final report -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLAWS — ATLAS &amp; VEGA · Matthew Garvin</title>
+<meta name="description" content="Case study: ATLAS, an AR toolkit for lunar astronauts, and VEGA, its conversational AI — winner of the 2020 NASA SUITS Challenge.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+:root { --accent: #6E8BFF; }
+
+/* ---------- shared viz panel ---------- */
+.viz {
+  margin: clamp(3rem, 7vw, 5rem) var(--pad);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: var(--bg-2);
+  overflow: hidden;
+}
+.viz__head {
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--hairline);
+}
+.viz__title { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+.viz__note { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); text-align: right; }
+.viz__body { padding: clamp(1.2rem, 3vw, 2.5rem); }
+
+/* ---------- visor simulator ---------- */
+.visor {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  max-height: 540px;
+  margin: 0 auto;
+  border-radius: 18px;
+  border: 1px solid var(--hairline);
+  background:
+    radial-gradient(140% 120% at 50% 120%, rgba(110,139,255,0.10), transparent 55%),
+    linear-gradient(180deg, #0a0a10 0%, #101018 60%, #16161f 100%);
+  overflow: hidden;
+  font-family: var(--font-mono);
+}
+.visor::after { /* lunar horizon */
+  content: ""; position: absolute; left: -5%; right: -5%; bottom: 0; height: 26%;
+  background: linear-gradient(180deg, rgba(150,150,160,0.10), rgba(120,120,130,0.05));
+  border-top: 1px solid rgba(200,200,210,0.16);
+  transform: rotate(-1.2deg);
+}
+.visor * { box-sizing: border-box; }
+.visor__crosshair {
+  position: absolute; top: 50%; left: 50%; width: 22px; height: 22px;
+  transform: translate(-50%, -50%); opacity: 0.45;
+}
+.visor__crosshair::before, .visor__crosshair::after {
+  content: ""; position: absolute; background: var(--ink);
+}
+.visor__crosshair::before { left: 50%; top: 0; bottom: 0; width: 1px; }
+.visor__crosshair::after { top: 50%; left: 0; right: 0; height: 1px; }
+
+/* minimap */
+.vmap {
+  position: absolute; top: 4.5%; left: 3%;
+  width: clamp(86px, 19%, 150px); aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgba(110,139,255,0.5);
+  background:
+    repeating-linear-gradient(0deg, transparent 0 14px, rgba(110,139,255,0.10) 14px 15px),
+    repeating-linear-gradient(90deg, transparent 0 14px, rgba(110,139,255,0.10) 14px 15px),
+    rgba(8,8,14,0.72);
+  overflow: hidden;
+}
+.vmap__wedge {
+  position: absolute; top: 50%; left: 50%; width: 0; height: 0;
+  border-left: 9px solid transparent; border-right: 9px solid transparent;
+  border-bottom: 16px solid rgba(110,139,255,0.85);
+  transform: translate(-50%, -100%);
+}
+.vmap__wp { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: #ffd75d; box-shadow: 0 0 8px rgba(255,215,93,0.7); }
+.vmap__label {
+  position: absolute; bottom: 7%; left: 50%; transform: translateX(-50%);
+  font-size: clamp(6px, 1.1vw, 9px); letter-spacing: 0.1em; color: rgba(236,235,230,0.75); white-space: nowrap;
+}
+
+/* biometrics */
+.vbio {
+  position: absolute; top: 4.5%; right: 3%;
+  display: flex; flex-direction: column; gap: 5px;
+  width: clamp(120px, 23%, 190px);
+}
+.vbio__row {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  padding: 5px 9px;
+  background: rgba(8,8,14,0.72);
+  border: 1px solid rgba(236,235,230,0.14);
+  border-radius: 4px;
+  font-size: clamp(7px, 1.25vw, 11px);
+  letter-spacing: 0.08em;
+  color: rgba(236,235,230,0.85);
+  transition: border-color 0.3s, color 0.3s, background 0.3s;
+}
+.vbio__row .val { color: #7fe08f; transition: color 0.3s; }
+/* state: caution */
+.visor[data-state="caution"] .vbio__row--o2 { border-color: rgba(255,198,93,0.8); }
+.visor[data-state="caution"] .vbio__row--o2 .val { color: #ffc65d; }
+/* state: warning */
+.visor[data-state="warning"] .vbio__row--o2 { border-color: rgba(255,93,93,0.9); background: rgba(80,10,10,0.4); }
+.visor[data-state="warning"] .vbio__row--o2 .val { color: #ff5d5d; }
+.visor[data-state="warning"] .vbio__row--press { border-color: rgba(255,198,93,0.8); }
+.visor[data-state="warning"] .vbio__row--press .val { color: #ffc65d; }
+/* state: LOS — purple per NASA stale-telemetry convention */
+.visor[data-state="los"] .vbio__row { border-color: rgba(190,130,255,0.7); }
+.visor[data-state="los"] .vbio__row .val { color: #be82ff; }
+
+/* task card */
+.vtask {
+  position: absolute; bottom: 7%; left: 3%;
+  width: clamp(150px, 30%, 250px);
+  background: rgba(8,8,14,0.78);
+  border: 1px solid rgba(236,235,230,0.16);
+  border-radius: 6px;
+  padding: 9px 11px;
+  font-size: clamp(7px, 1.2vw, 10.5px);
+  letter-spacing: 0.06em;
+  color: rgba(236,235,230,0.85);
+}
+.vtask__head { color: var(--accent); margin-bottom: 6px; font-size: 0.95em; }
+.vtask__step { display: flex; gap: 7px; padding: 2.5px 0; }
+.vtask__step.done { opacity: 0.45; text-decoration: line-through; }
+.vtask__step.active { color: #fff; }
+.vtask__step.active::before { content: "▸"; color: var(--accent); }
+
+/* vega chip */
+.vvega {
+  position: absolute; bottom: 7%; right: 3%;
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(8,8,14,0.78);
+  border: 1px solid rgba(110,139,255,0.45);
+  border-radius: 999px;
+  padding: 7px 13px;
+  font-size: clamp(7px, 1.2vw, 10.5px);
+  letter-spacing: 0.12em;
+  color: rgba(236,235,230,0.85);
+}
+.vvega__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: vpulse 1.6s ease-in-out infinite; }
+@keyframes vpulse { 0%,100% { opacity: 1; transform: scale(1);} 50% { opacity: 0.4; transform: scale(0.75);} }
+
+/* banner */
+.vbanner {
+  position: absolute; top: 4.5%; left: 50%; transform: translateX(-50%);
+  padding: 7px 16px; border-radius: 4px;
+  font-size: clamp(8px, 1.35vw, 12px); letter-spacing: 0.14em;
+  display: none; white-space: nowrap;
+}
+.visor[data-state="caution"] .vbanner--caution { display: block; background: rgba(90,65,5,0.55); border: 1px solid #ffc65d; color: #ffc65d; }
+.visor[data-state="warning"] .vbanner--warning { display: block; background: rgba(90,10,10,0.6); border: 1px solid #ff5d5d; color: #ff5d5d; animation: vblink 1s steps(2) infinite; }
+.visor[data-state="los"] .vbanner--los { display: block; background: rgba(60,25,95,0.55); border: 1px solid #be82ff; color: #be82ff; }
+@keyframes vblink { 50% { opacity: 0.55; } }
+
+/* state toggles */
+.vstates { display: flex; gap: 8px; flex-wrap: wrap; }
+.vstate {
+  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 0.5rem 0.95rem; border-radius: 999px;
+  background: transparent; color: var(--ink-dim);
+  border: 1px solid var(--hairline); cursor: pointer;
+  transition: all 0.25s;
+}
+.vstate:hover { color: var(--ink); }
+.vstate.on { border-color: var(--accent); color: var(--accent); }
+
+/* ---------- architecture svg ---------- */
+.arch-svg { width: 100%; height: auto; display: block; }
+.arch-svg text { font-family: "IBM Plex Mono", monospace; }
+.arch-svg .box { fill: rgba(8,8,14,0.6); stroke: rgba(236,235,230,0.18); }
+.arch-svg .box--accent { stroke: rgba(110,139,255,0.65); }
+.arch-svg .lbl { fill: #ecebe6; font-size: 11px; letter-spacing: 0.08em; }
+.arch-svg .sub { fill: #9b9a93; font-size: 8.5px; letter-spacing: 0.06em; }
+.arch-svg .tag { fill: #6E8BFF; font-size: 8.5px; letter-spacing: 0.14em; }
+.arch-svg .wire { stroke: rgba(110,139,255,0.55); stroke-width: 1.2; fill: none; stroke-dasharray: 5 5; animation: wiremove 1.4s linear infinite; }
+@keyframes wiremove { to { stroke-dashoffset: -10; } }
+@media (prefers-reduced-motion: reduce) { .arch-svg .wire, .vvega__dot, .vbanner--warning { animation: none; } }
+
+/* ---------- flow stepper ---------- */
+.flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.flow__step {
+  border: 1px solid var(--hairline); border-radius: 6px;
+  background: rgba(8,8,14,0.5);
+  padding: 1rem 0.9rem 1.1rem;
+  position: relative;
+}
+.flow__step::after {
+  content: "→"; position: absolute; right: -13px; top: 50%; transform: translateY(-50%);
+  color: var(--accent); font-size: 0.9rem; z-index: 1;
+}
+.flow__step:last-child::after { display: none; }
+.flow__num { font-family: var(--font-mono); font-size: 0.62rem; color: var(--accent); letter-spacing: 0.12em; display: block; margin-bottom: 0.5rem; }
+.flow__step h3 { font-size: 0.92rem; font-weight: 600; margin: 0 0 0.4rem; color: var(--ink); }
+.flow__step p { font-size: 0.74rem; color: var(--ink-dim); margin: 0; line-height: 1.5; }
+.flow__voice { display: inline-block; margin-top: 0.5rem; font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.06em; color: var(--accent); border: 1px solid rgba(110,139,255,0.4); border-radius: 999px; padding: 0.2rem 0.55rem; }
+@media (max-width: 900px) {
+  .flow { grid-template-columns: 1fr; }
+  .flow__step::after { content: "↓"; right: auto; left: 50%; top: auto; bottom: -16px; transform: translateX(-50%); }
+}
+
+/* ---------- vega chat ---------- */
+.chat { max-width: 620px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+.chat__msg { display: flex; flex-direction: column; gap: 4px; max-width: 85%; }
+.chat__msg--astro { align-self: flex-end; align-items: flex-end; }
+.chat__msg--vega { align-self: flex-start; }
+.chat__bubble {
+  padding: 0.7rem 1rem; border-radius: 12px;
+  font-size: 0.88rem; line-height: 1.5; color: var(--ink);
+}
+.chat__msg--astro .chat__bubble { background: rgba(110,139,255,0.16); border: 1px solid rgba(110,139,255,0.4); border-bottom-right-radius: 3px; }
+.chat__msg--vega .chat__bubble { background: rgba(236,235,230,0.05); border: 1px solid var(--hairline); border-bottom-left-radius: 3px; }
+.chat__meta { font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
+.chat__meta .intent { color: var(--accent); }
+.chat__divider { text-align: center; font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.14em; color: var(--ink-dim); text-transform: uppercase; padding: 0.4rem 0; }
+
+/* ---------- TLX bars ---------- */
+.tlx { display: flex; flex-direction: column; gap: 14px; max-width: 640px; }
+.tlx__row { display: grid; grid-template-columns: 11rem 1fr; gap: 14px; align-items: center; }
+.tlx__label { font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); text-align: right; }
+.tlx__track { height: 10px; border-radius: 999px; background: rgba(236,235,230,0.07); overflow: hidden; }
+.tlx__fill { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, rgba(110,139,255,0.5), #6E8BFF); }
+@media (max-width: 560px) { .tlx__row { grid-template-columns: 7.2rem 1fr; } }
+
+/* ---------- timeline ---------- */
+.tline { position: relative; padding-left: 22px; }
+.tline::before { content: ""; position: absolute; left: 5px; top: 6px; bottom: 6px; width: 1px; background: var(--hairline); }
+.tline__item { position: relative; padding: 0 0 1.6rem; }
+.tline__item:last-child { padding-bottom: 0; }
+.tline__item::before {
+  content: ""; position: absolute; left: -22px; top: 5px;
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--bg); border: 2px solid var(--accent);
+}
+.tline__date { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em; color: var(--accent); text-transform: uppercase; display: block; margin-bottom: 0.3rem; }
+.tline__item h3 { font-size: 1rem; font-weight: 600; margin: 0 0 0.3rem; }
+.tline__item p { font-size: 0.88rem; color: var(--ink-dim); margin: 0; max-width: 38rem; }
+
+/* module grid */
+.modgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--hairline); border: 1px solid var(--hairline); margin-top: 0.5rem; }
+.modgrid span { background: var(--bg); padding: 0.85rem 0.9rem; font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
+.modgrid span b { color: var(--accent); font-weight: 500; }
+@media (max-width: 700px) { .modgrid { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body data-page="case">
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor" aria-hidden="true"></div>
+
+<header class="nav">
+  <a class="nav__logo" href="index.html">MG<sup>®</sup></a>
+  <nav class="nav__links" aria-label="Primary">
+    <a href="index.html#work">Work</a>
+    <a href="index.html#about">About</a>
+    <a href="index.html#contact">Contact</a>
+  </nav>
+  <div class="nav__meta mono">CASE STUDY — 02 / 07</div>
+</header>
+
+<main id="main">
+  <section class="case-hero">
+    <p class="case-hero__label mono">CLAWS · UNIVERSITY OF MICHIGAN × 2020 NASA SUITS CHALLENGE</p>
+    <h1 class="case-hero__title">
+      <span class="line"><span>An AR field kit</span></span>
+      <span class="line"><span>for the Moon.</span></span>
+    </h1>
+    <p class="case-hero__sub">ATLAS — the AR Toolkit for Lunar Astronauts and Scientists — is a modular
+    HoloLens system for Artemis-generation lunar EVAs, paired with VEGA, a
+    Rasa-based conversational AI, and the CMCC mission-control web app.
+    Designed by a 30+ member interdisciplinary student lab, tested with NASA
+    scientists and flight controllers, and winner of the 2020 NASA SUITS Challenge.</p>
+    <div class="case-meta">
+      <div class="case-meta__cell"><span class="k mono">ROLE</span><span class="v">Human-in-the-Loop (HITL) Testing Coordinator · UX Research</span></div>
+      <div class="case-meta__cell"><span class="k mono">TEAM</span><span class="v">30+ students · advised by Dr. Leia Stirling · UI/UX consults with Dr. Michael Nebeling</span></div>
+      <div class="case-meta__cell"><span class="k mono">METHODS</span><span class="v">Expert interviews, task flowcharts, XD/Figma prototyping, NASA-TLX test design</span></div>
+      <div class="case-meta__cell"><span class="k mono">OUTCOME</span><span class="v">2020 NASA SUITS winner · $10K Epic MegaGrant · foundation for all later CLAWS systems</span></div>
+    </div>
+  </section>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The challenge</h2>
+      <div class="case-body">
+        <p>NASA's SUITS challenge asks university teams to design the visual
+        display system for the xEMU — the Artemis-generation spacesuit —
+        replacing the cuff checklists and wrist-mounted mirrors astronauts
+        still use today. The brief is unforgiving: support navigation, sample
+        collection, repairs, and emergencies on the lunar surface
+        <strong>without inhibiting the mission</strong>.</p>
+        <p class="pull">A spacesuit display competes for attention an astronaut
+        cannot spare. Every design decision started from that constraint:
+        non-intrusive first, everything else second.</p>
+        <p>CLAWS first competed in 2019 with MEISSA, an ISS-focused
+        predecessor tested with EVA flight controllers at Johnson Space
+        Center. For 2020 the team grew from 10 to over 30 members, and the
+        problem moved to the Moon: drastic lighting swings, unfamiliar
+        terrain, and geology work that demands both hands.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- VISOR SIMULATOR -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">ATLAS Visor UI — Interaction States</span>
+      <span class="viz__note">Web recreation of the standard non-intrusive view</span>
+    </div>
+    <div class="viz__body">
+      <div class="visor" id="visor" data-state="nominal" role="img" aria-label="Simulated ATLAS visor interface showing minimap, biometrics, task list, and VEGA assistant">
+        <div class="visor__crosshair"></div>
+        <div class="vbanner vbanner--caution">CAUTION — O₂ CONSUMPTION ABOVE NOMINAL</div>
+        <div class="vbanner vbanner--warning">WARNING — BEGIN ABORT PROTOCOL</div>
+        <div class="vbanner vbanner--los">TELEMETRY STALE — LOSS OF SIGNAL</div>
+        <div class="vmap">
+          <div class="vmap__wedge"></div>
+          <div class="vmap__wp" style="top:26%;left:62%"></div>
+          <div class="vmap__wp" style="top:58%;left:30%"></div>
+          <div class="vmap__label">WP-3 · 240M NE</div>
+        </div>
+        <div class="vbio">
+          <div class="vbio__row vbio__row--o2"><span>O₂</span><span class="val">87%</span></div>
+          <div class="vbio__row vbio__row--h2o"><span>H₂O</span><span class="val">64%</span></div>
+          <div class="vbio__row vbio__row--press"><span>SUIT PRESS</span><span class="val">4.3 PSI</span></div>
+          <div class="vbio__row vbio__row--hr"><span>HEART RATE</span><span class="val">92 BPM</span></div>
+        </div>
+        <div class="vtask">
+          <div class="vtask__head">TASK 4 / 7 — SAMPLE COLLECTION</div>
+          <div class="vtask__step done">Navigate to waypoint 3</div>
+          <div class="vtask__step active">Image sampling site</div>
+          <div class="vtask__step">Collect &amp; store sample</div>
+          <div class="vtask__step">Record GeoNote</div>
+        </div>
+        <div class="vvega"><span class="vvega__dot"></span>VEGA — LISTENING</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-top:1.1rem">
+        <div class="vstates" role="group" aria-label="Toggle visor state">
+          <button class="vstate on" data-set="nominal">Nominal</button>
+          <button class="vstate" data-set="caution">Caution</button>
+          <button class="vstate" data-set="warning">Warning</button>
+          <button class="vstate" data-set="los">Loss of signal</button>
+        </div>
+        <span class="viz__note">COLOR CODES PER NASA CONVENTION — AMBER / RED SEVERITY · PURPLE = STALE TELEMETRY</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>Grounding the design</h2>
+      <div class="case-body">
+        <p>Before a single mockup, the team ran a literature review of EVA
+        workflows and modeled how astronauts navigate to a site and collect
+        samples as task flowcharts. Then we went to the people who'd actually
+        done the work — six expert engagements that directly shaped the
+        system:</p>
+        <div class="tline" style="margin-top:2rem">
+          <div class="tline__item"><span class="tline__date">OCT 2019</span><h3>Jacob Richardson — planetary volcanologist, NASA Goddard</h3><p>Introduced geology field notes; recommended analog field-trek sites near Michigan.</p></div>
+          <div class="tline__item"><span class="tline__date">NOV 2019</span><h3>Brent Garry — planetary volcanologist, NASA Goddard (BASALT, DRATS)</h3><p>Minimap navigation and comms architectures → shaped the navigation module and CMCC communications.</p></div>
+          <div class="tline__item"><span class="tline__date">DEC 2019</span><h3>Ben Feist — software engineer, "Apollo 17 in Real Time"</h3><p>Field notebooks, data storage and syncing → foundational to the CMCC's database design.</p></div>
+          <div class="tline__item"><span class="tline__date">JAN 2020</span><h3>Trevor Graff — Chief Scientist, ARES group, JSC · NEEMO 22 aquanaut</h3><p>AR in extreme analog environments; NASA sampling processes → greatly influenced the GeoNotes sampling module.</p></div>
+          <div class="tline__item"><span class="tline__date">FEB 2020</span><h3>Dr. Jessica Marquez — Human Systems Integration, NASA Ames</h3><p>Notifications, messaging, and text-to-speech; granted research access to Playbook, integrated into the CMCC.</p></div>
+          <div class="tline__item"><span class="tline__date">ONGOING</span><h3>Geology graduate students</h3><p>Interviews on sampling tasks, field-note conventions, and rock-description vocabulary.</p></div>
+        </div>
+        <p class="pull" style="margin-top:2.5rem">Assessing perception and cognition
+        requirements led to a hard rule: the interface could carry no
+        ambiguity. Icons were barred from the final mockup and replaced with
+        proper terminology.</p>
+        <p>Other decisions followed the same logic. The color scheme was
+        engineered to stay visible across the drastic lighting swings of the
+        lunar surface. Typography followed NASA's recommendation (Helvetica
+        headers). And the warning hierarchy was matched to the patterns used
+        by the Michigan Medicine emergency department, which has well-tested
+        rules for when and how to interrupt busy people.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SAMPLING FLOW -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">GeoNotes — Sample Collection Protocol</span>
+      <span class="viz__note">From the ATLAS UX flowcharts</span>
+    </div>
+    <div class="viz__body">
+      <div class="flow">
+        <div class="flow__step"><span class="flow__num">01</span><h3>Navigate</h3><p>Minimap + waypoints planned pre-EVA in the CMCC guide the astronaut to the site.</p><span class="flow__voice">"VEGA, take me to waypoint 3"</span></div>
+        <div class="flow__step"><span class="flow__num">02</span><h3>Image the site</h3><p>Photograph the surrounding environment before disturbance, per NASA sampling process.</p></div>
+        <div class="flow__step"><span class="flow__num">03</span><h3>Collect &amp; store</h3><p>Guided procedure for collecting the sample and stowing it with a sample identifier.</p></div>
+        <div class="flow__step"><span class="flow__num">04</span><h3>Record GeoNote</h3><p>Digital field notes — location, timestamp, author, category — replace paper notebooks.</p><span class="flow__voice">"Log: vesicular basalt, crater rim"</span></div>
+        <div class="flow__step"><span class="flow__num">05</span><h3>Sync to CMCC</h3><p>Data streams to mission control for scientists to review live and in post-ops debrief.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The system</h2>
+      <div class="case-body">
+        <p>ATLAS is deliberately modular. Every capability is a
+        <strong>module</strong> — the smallest unit of functionality. Modules
+        compose into <strong>protocols</strong>, each catered to a phase of
+        the EVA life cycle: mission planning, suit prep, sample collection,
+        rover repair, emergency warnings, abort. A central
+        <strong>Protocol Manager</strong> drives the application, swapping
+        protocols while modules hold their state — so an astronaut moving from
+        sample collection to an abort warning keeps the same biometrics and
+        navigation in view, with no reload and no lost context.</p>
+        <div class="modgrid" aria-label="The eight ATLAS modules">
+          <span><b>01</b> Navigation</span><span><b>02</b> Biometrics</span>
+          <span><b>03</b> Mission tasks</span><span><b>04</b> Communications</span>
+          <span><b>05</b> GeoNotes</span><span><b>06</b> Sample ID</span>
+          <span><b>07</b> QR scanner</span><span><b>08</b> Warnings</span>
+        </div>
+        <p style="margin-top:1.5rem">Around the headset sits a full
+        sociotechnical system: the CMCC — a Django/PostgreSQL mission-control
+        web app, migrated to the cloud during COVID — supports planning
+        (mission tasks, waypoint marking), live operations (control room,
+        biometric monitoring, "get-ahead" tasks), and post-ops debrief (field
+        notes, recordings, route maps). A Raspberry Pi sensor suite (GPS,
+        IMU, photoresistor-triggered lighting) stands in for lunar
+        positioning infrastructure.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ARCHITECTURE -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">System Architecture</span>
+      <span class="viz__note">ATLAS · VEGA · CMCC · Sensor suite</span>
+    </div>
+    <div class="viz__body" style="padding-bottom:1.6rem">
+      <svg class="arch-svg" viewBox="0 0 920 430" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Architecture diagram: HoloLens running ATLAS and VEGA communicates with the CMCC cloud, which receives data from a Raspberry Pi sensor suite">
+        <!-- SUIT column -->
+        <text class="tag" x="40" y="34">ON THE ASTRONAUT — MICROSOFT HOLOLENS</text>
+        <rect class="box box--accent" x="40" y="48" width="300" height="332" rx="8"/>
+        <text class="lbl" x="60" y="80">ATLAS</text>
+        <text class="sub" x="60" y="96">AR Toolkit for Lunar Astronauts &amp; Scientists</text>
+        <rect class="box" x="60" y="112" width="260" height="40" rx="5"/>
+        <text class="lbl" x="76" y="136" font-size="10">PROTOCOL MANAGER</text>
+        <rect class="box" x="60" y="164" width="125" height="40" rx="5"/>
+        <text class="sub" x="74" y="182">PROTOCOL:</text>
+        <text class="lbl" x="74" y="196" font-size="9.5">SAMPLING</text>
+        <rect class="box" x="195" y="164" width="125" height="40" rx="5"/>
+        <text class="sub" x="209" y="182">PROTOCOL:</text>
+        <text class="lbl" x="209" y="196" font-size="9.5">REPAIR · ABORT…</text>
+        <rect class="box" x="60" y="216" width="260" height="74" rx="5"/>
+        <text class="sub" x="76" y="236">MODULES (PERSIST ACROSS PROTOCOLS)</text>
+        <text class="sub" x="76" y="254" fill="#ecebe6">NAV · BIOMETRICS · TASKS · COMMS</text>
+        <text class="sub" x="76" y="270" fill="#ecebe6">GEONOTES · SAMPLE ID · QR · WARNINGS</text>
+        <rect class="box box--accent" x="60" y="302" width="260" height="56" rx="5"/>
+        <text class="lbl" x="76" y="326">VEGA</text>
+        <text class="sub" x="76" y="342">Rasa conversational AI — voice in, voice out</text>
+
+        <!-- CMCC column -->
+        <text class="tag" x="580" y="34">ON THE GROUND — CLOUD (HEROKU)</text>
+        <rect class="box box--accent" x="580" y="48" width="300" height="244" rx="8"/>
+        <text class="lbl" x="600" y="80">CMCC</text>
+        <text class="sub" x="600" y="96">CLAWS Mission Control Center — Django + PostgreSQL</text>
+        <rect class="box" x="600" y="112" width="260" height="44" rx="5"/>
+        <text class="sub" x="616" y="130">PRE-OPS</text>
+        <text class="sub" x="616" y="146" fill="#ecebe6">Mission tasks · waypoint planning</text>
+        <rect class="box" x="600" y="166" width="260" height="44" rx="5"/>
+        <text class="sub" x="616" y="184">OPERATIONS</text>
+        <text class="sub" x="616" y="200" fill="#ecebe6">Control room · biometrics · get-ahead tasks</text>
+        <rect class="box" x="600" y="220" width="260" height="44" rx="5"/>
+        <text class="sub" x="616" y="238">POST-OPS</text>
+        <text class="sub" x="616" y="254" fill="#ecebe6">Field notes · recordings · route map</text>
+
+        <!-- Sensor suite -->
+        <text class="tag" x="580" y="330">IN THE EVA BACKPACK</text>
+        <rect class="box" x="580" y="344" width="300" height="58" rx="8"/>
+        <text class="lbl" x="600" y="370" font-size="10">RASPBERRY PI SENSOR SUITE</text>
+        <text class="sub" x="600" y="386">NEO-6M GPS · IMU · photoresistor light control</text>
+
+        <!-- wires -->
+        <path class="wire" d="M340 150 H 580"/>
+        <text class="sub" x="400" y="142">JSON / HTTP — telemetry, GeoNotes, media</text>
+        <path class="wire" d="M580 252 H 340"/>
+        <text class="sub" x="392" y="272">waypoints · tasks · warnings · get-aheads</text>
+        <path class="wire" d="M730 344 V 292"/>
+        <text class="sub" x="742" y="322">TCP — position, heading</text>
+      </svg>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>Designing the conversation</h2>
+      <div class="case-body">
+        <p>Pressurized gloves make every tap expensive — so voice is ATLAS's
+        primary input. VEGA (Voice Entity for Guiding Astronauts) is built on
+        Rasa, a dedicated conversational-AI platform rather than a keyword
+        recognizer. That distinction matters: astronauts shouldn't have to
+        memorize exact phrases. Trained on sample conversations ("stories"), VEGA
+        interprets diverse natural language — and supports multiple languages,
+        because human spaceflight is a global partnership.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- VEGA CHAT -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">VEGA — One Intent, Many Phrasings</span>
+      <span class="viz__note">Sample dialogue · Rasa NLU</span>
+    </div>
+    <div class="viz__body">
+      <div class="chat">
+        <div class="chat__msg chat__msg--astro"><div class="chat__bubble">How much water do I have left?</div><span class="chat__meta">ASTRONAUT → NLU: <span class="intent">query_biometrics (H₂O)</span></span></div>
+        <div class="chat__msg chat__msg--vega"><div class="chat__bubble">Water remaining: 64 percent — approximately 3 hours at current consumption.</div><span class="chat__meta">VEGA · TTS + VISOR MIRROR</span></div>
+        <div class="chat__divider">— different phrasing, same intent —</div>
+        <div class="chat__msg chat__msg--astro"><div class="chat__bubble">What's the status on my H2O?</div><span class="chat__meta">ASTRONAUT → NLU: <span class="intent">query_biometrics (H₂O)</span></span></div>
+        <div class="chat__msg chat__msg--vega"><div class="chat__bubble">Water remaining: 64 percent. Would you like consumption trends?</div><span class="chat__meta">VEGA</span></div>
+        <div class="chat__msg chat__msg--astro"><div class="chat__bubble">Take me to waypoint three.</div><span class="chat__meta">ASTRONAUT → NLU: <span class="intent">navigate (WP-3)</span></span></div>
+        <div class="chat__msg chat__msg--vega"><div class="chat__bubble">Routing to Waypoint 3 — 240 meters northeast. Path displayed on your minimap.</div><span class="chat__meta">VEGA → NAVIGATION MODULE</span></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>Testing under constraint</h2>
+      <div class="case-body">
+        <p>As one of two HITL coordinators, I developed the February 2020
+        usability test plan around the <strong>NASA Task Load Index</strong> —
+        the standard instrument, invented at NASA Ames in the 1980s, for
+        assessing subjective workload with a human-machine interface. Its six
+        dimensions formed the dependent variables each trial series sought to
+        minimize, and gave us a shared language with the EVA experts
+        reviewing our work.</p>
+        <p>Then COVID-19 hit. HoloLens deployment was off the table. We
+        adapted: the team tested static designs by displaying them on the
+        HoloLens with a clear background — previewing color and text-size
+        decisions in true AR optics without building in Unity — and converted
+        the moderated test plan into a remote Adobe XD walkthrough paired
+        with a Qualtrics questionnaire.</p>
+        <p class="pull">When COVID canceled in-person testing, adapting the
+        plan became most of the job.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TLX -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">NASA-TLX — The Workload Instrument</span>
+      <span class="viz__note">Illustrative profile of the six dimensions measured per trial</span>
+    </div>
+    <div class="viz__body">
+      <div class="tlx" id="tlx">
+        <div class="tlx__row"><span class="tlx__label">Mental demand</span><div class="tlx__track"><div class="tlx__fill" data-w="62"></div></div></div>
+        <div class="tlx__row"><span class="tlx__label">Physical demand</span><div class="tlx__track"><div class="tlx__fill" data-w="48"></div></div></div>
+        <div class="tlx__row"><span class="tlx__label">Temporal demand</span><div class="tlx__track"><div class="tlx__fill" data-w="55"></div></div></div>
+        <div class="tlx__row"><span class="tlx__label">Performance</span><div class="tlx__track"><div class="tlx__fill" data-w="30"></div></div></div>
+        <div class="tlx__row"><span class="tlx__label">Effort</span><div class="tlx__track"><div class="tlx__fill" data-w="58"></div></div></div>
+        <div class="tlx__row"><span class="tlx__label">Frustration</span><div class="tlx__track"><div class="tlx__fill" data-w="35"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The outcome</h2>
+      <div class="case-body">
+        <div class="outcomes">
+          <div class="outcome"><span class="outcome__num">1st</span><span class="outcome__label mono">2020 NASA SUITS CHALLENGE</span></div>
+          <div class="outcome"><span class="outcome__num">$10K</span><span class="outcome__label mono">EPIC MEGAGRANT AWARDED</span></div>
+          <div class="outcome"><span class="outcome__num">8</span><span class="outcome__label mono">MODULAR CAPABILITIES SHIPPED IN ATLAS</span></div>
+        </div>
+        <p style="margin-top:2rem">ATLAS became the foundational system the
+        CLAWS lab continues to build on — VEGA grew into deeper ATLAS and
+        CMCC integration, and the roadmap we authored (RIGEL rock
+        identification, HoloLens 2 eye-tracking, biometric trend prediction
+        suggested by former astronaut Dr. Jim Bagian) seeded the lab's next
+        three years of work.</p>
+        <p><strong>What I'd do differently:</strong> bring geologists in at
+        week one, not month three. Our sampling flow improved more from two
+        hours with a field geologist than from a month of internal iteration.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="case-next">
+    <span class="k mono">NEXT CASE STUDY — 03 / 07</span>
+    <a class="case-next__link" href="exploration-medical.html">Exploration Medical Capability →</a>
+  </section>
+</main>
+
+<p class="case-disclaimer mono">CONTENT BASED ON THE CLAWS 2020 NASA SUITS FINAL REPORT. INTERFACE GRAPHICS ARE WEB RECREATIONS, NOT FLIGHT SOFTWARE; TLX PROFILE AND DIALOGUE VALUES ARE ILLUSTRATIVE.</p>
+
+<footer class="footer">
+  <p class="mono">© 2026 MATTHEW GARVIN · <a href="https://vinsettastudio.com/" target="_blank" rel="noopener">DESIGNED BY VINSETTA STUDIO LLC</a></p>
+  <div class="footer__links mono">
+    <a href="https://www.linkedin.com/in/matthew-garvin-7260724a/" target="_blank" rel="noopener">LINKEDIN</a>
+    <a href="https://github.com/mtthwgrvn" target="_blank" rel="noopener">GITHUB</a>
+    <a href="https://mtthwx.com" target="_blank" rel="noopener">BLOG</a>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="js/main.js"></script>
+<script>
+(function () {
+  /* visor state toggles */
+  var visor = document.getElementById('visor');
+  document.querySelectorAll('.vstate').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.vstate').forEach(function (b) { b.classList.remove('on'); });
+      btn.classList.add('on');
+      visor.setAttribute('data-state', btn.getAttribute('data-set'));
+    });
+  });
+
+  /* TLX bar fill on scroll */
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var fills = document.querySelectorAll('.tlx__fill');
+  if (reduced || typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
+    fills.forEach(function (f) { f.style.width = f.getAttribute('data-w') + '%'; });
+  } else {
+    fills.forEach(function (f) {
+      gsap.to(f, {
+        width: f.getAttribute('data-w') + '%',
+        duration: 1.2, ease: 'power3.out',
+        scrollTrigger: { trigger: f, start: 'top 90%' }
+      });
+    });
+    /* reveal viz panels + chat bubbles + timeline + flow steps */
+    document.querySelectorAll('.viz, .chat__msg, .tline__item, .flow__step').forEach(function (el) {
+      gsap.from(el, {
+        opacity: 0, y: 26, duration: 0.7, ease: 'power3.out',
+        scrollTrigger: { trigger: el, start: 'top 92%' }
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>

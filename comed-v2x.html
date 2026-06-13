@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- ComEd V2X case study — based on the project SOW and Midpoint Technical Memo (Walker-Miller Energy Services × ICF × ComEd, 2025) -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ComEd — V2X Impact Study · Matthew Garvin</title>
+<meta name="description" content="Case study: leading an environmental and social impact study of bi-directional EV charging for ComEd — prospective life cycle assessment and spatial equity analysis, 2025–2040.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+:root { --accent: #00D98B; }
+
+/* ---------- shared viz panel ---------- */
+.viz {
+  margin: clamp(3rem, 7vw, 5rem) var(--pad);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: var(--bg-2);
+  overflow: hidden;
+}
+.viz__head {
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--hairline);
+}
+.viz__title { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+.viz__note { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); text-align: right; }
+.viz__body { padding: clamp(1.2rem, 3vw, 2.5rem); }
+
+/* ---------- study stats ---------- */
+.sgrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--hairline); border: 1px solid var(--hairline); }
+.sgrid__cell { background: var(--bg); padding: 1.4rem 1.2rem; }
+.sgrid__num { display: block; font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 600; line-height: 1; color: var(--accent); letter-spacing: -0.02em; }
+.sgrid__label { display: block; margin-top: 0.55rem; font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
+@media (max-width: 820px) { .sgrid { grid-template-columns: 1fr 1fr; } }
+
+/* ---------- tabs ---------- */
+.vtab {
+  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 0.55rem 1rem; border-radius: 999px;
+  background: transparent; color: var(--ink-dim);
+  border: 1px solid var(--hairline); cursor: pointer; transition: all 0.25s;
+}
+.vtab:hover { color: var(--ink); }
+.vtab.on { border-color: var(--accent); color: var(--accent); }
+.tabrow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
+
+/* ---------- emissions explorer ---------- */
+.exbars { display: flex; flex-direction: column; gap: 14px; max-width: 680px; margin-top: 0.6rem; }
+.exbar { display: grid; grid-template-columns: 4rem 1fr 7rem; gap: 14px; align-items: center; }
+.exbar__year { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.1em; color: var(--ink-dim); text-align: right; }
+.exbar__track { height: 14px; border-radius: 999px; background: rgba(236,235,230,0.07); overflow: hidden; }
+.exbar__fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, rgba(0,217,139,0.45), #00D98B); transition: width 0.6s cubic-bezier(0.65,0,0.35,1), background 0.3s; }
+.exbar__fill.neg { background: linear-gradient(90deg, rgba(255,93,93,0.5), #ff5d5d); }
+.exbar__val { font-family: var(--font-mono); font-size: 0.64rem; color: var(--accent); }
+.exbar__val.neg { color: #ff5d5d; }
+.exnote { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); margin-top: 1.2rem; display: block; min-height: 2.4em; }
+
+/* ---------- grid trajectory chart ---------- */
+.traj { width: 100%; height: auto; display: block; }
+.traj text { font-family: "IBM Plex Mono", monospace; font-size: 9px; fill: #9b9a93; letter-spacing: 0.06em; }
+.traj .axis { stroke: rgba(236,235,230,0.25); stroke-width: 1; }
+.traj .gline { fill: none; stroke-width: 2; }
+.traj .gline--peak { stroke: #00D98B; }
+.traj .gline--off { stroke: rgba(236,235,230,0.6); stroke-dasharray: 6 4; }
+.traj .dot { fill: var(--bg); stroke-width: 2; }
+.traj .dot--peak { stroke: #00D98B; }
+.traj .dot--off { stroke: rgba(236,235,230,0.6); }
+.trajlegend { display: flex; gap: 1.4rem; margin-top: 0.8rem; font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); flex-wrap: wrap; }
+.trajlegend .sw { display: inline-block; width: 22px; height: 2px; vertical-align: middle; margin-right: 6px; }
+
+/* ---------- method flow ---------- */
+.flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.flow__step { border: 1px solid var(--hairline); border-radius: 6px; background: rgba(8,8,14,0.5); padding: 1rem 0.9rem 1.1rem; position: relative; }
+.flow__step::after { content: "→"; position: absolute; right: -13px; top: 50%; transform: translateY(-50%); color: var(--accent); font-size: 0.9rem; z-index: 1; }
+.flow__step:last-child::after { display: none; }
+.flow__num { font-family: var(--font-mono); font-size: 0.6rem; color: var(--accent); letter-spacing: 0.12em; display: block; margin-bottom: 0.5rem; }
+.flow__step h3 { font-size: 0.92rem; font-weight: 600; margin: 0 0 0.4rem; color: var(--ink); }
+.flow__step p { font-size: 0.74rem; color: var(--ink-dim); margin: 0; line-height: 1.55; }
+@media (max-width: 900px) {
+  .flow { grid-template-columns: 1fr; }
+  .flow__step::after { content: "↓"; right: auto; left: 50%; top: auto; bottom: -16px; transform: translateX(-50%); }
+}
+
+/* ---------- peaker displacement atlas ---------- */
+.atwrap { display: grid; grid-template-columns: 1.5fr 1fr; gap: clamp(1.2rem, 3vw, 2.2rem); align-items: start; }
+@media (max-width: 880px) { .atwrap { grid-template-columns: 1fr; } }
+.atmap { width: 100%; height: auto; display: block; border: 1px solid var(--hairline); border-radius: 8px; background: #07090c; }
+.atmap text { font-family: "IBM Plex Mono", monospace; font-size: 10px; fill: rgba(236,235,230,0.35); letter-spacing: 0.08em; }
+.atmap .shore { fill: none; stroke: rgba(93,160,255,0.35); stroke-width: 1.5; stroke-dasharray: 5 5; }
+.atmap .zipdot { stroke: rgba(0,217,139,0.35); stroke-width: 0.5; cursor: pointer; }
+.atmap .zipdot.hbring { stroke: #FFC65D; stroke-width: 1.4; }
+.atmap .pkmark { fill: #ff5d5d; opacity: 0.9; }
+.atctl { display: flex; gap: 1rem 1.6rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.1rem; }
+.atslider { display: flex; align-items: center; gap: 0.8rem; flex: 1; min-width: 220px; }
+.atslider input[type="range"] { accent-color: var(--accent); flex: 1; }
+.atslider output { font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent); min-width: 3.2em; }
+.atstats { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--hairline); border: 1px solid var(--hairline); margin-bottom: 1rem; }
+.atstats div { background: var(--bg); padding: 0.9rem 1rem; }
+.atstats .n { display: block; font-size: 1.3rem; font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+.atstats .l { display: block; margin-top: 0.3rem; font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
+.atlist { list-style: none; margin: 0; padding: 0; counter-reset: atl; }
+.atlist li { display: grid; grid-template-columns: 1.4rem 1fr 70px; gap: 8px; align-items: center; padding: 0.45rem 0; border-top: 1px solid var(--hairline); font-size: 0.8rem; counter-increment: atl; }
+.atlist li::before { content: counter(atl, decimal-leading-zero); font-family: var(--font-mono); font-size: 0.6rem; color: var(--ink-dim); }
+.atlist .who { color: var(--ink); }
+.atlist .who small { display: block; font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.08em; color: var(--ink-dim); text-transform: uppercase; }
+.atlist .bar { height: 7px; border-radius: 999px; background: rgba(236,235,230,0.07); overflow: hidden; }
+.atlist .bar i { display: block; height: 100%; background: linear-gradient(90deg, rgba(0,217,139,0.45), #00D98B); border-radius: 999px; }
+.athyp { border: 1px solid rgba(0,217,139,0.45); border-radius: 6px; padding: 0.9rem 1rem; font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-top: 1rem; line-height: 1.7; }
+.atlegend { display: flex; gap: 1.2rem; flex-wrap: wrap; margin-top: 0.9rem; font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
+</style>
+</head>
+<body data-page="case">
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor" aria-hidden="true"></div>
+
+<header class="nav">
+  <a class="nav__logo" href="index.html">MG<sup>®</sup></a>
+  <nav class="nav__links" aria-label="Primary">
+    <a href="index.html#work">Work</a>
+    <a href="index.html#about">About</a>
+    <a href="index.html#contact">Contact</a>
+  </nav>
+  <div class="nav__meta mono">CASE STUDY — 01 / 07</div>
+</header>
+
+<main id="main">
+  <section class="case-hero">
+    <p class="case-hero__label mono">COMED BE BACKUP POWER CAPABILITIES PILOT · WALKER-MILLER ENERGY SERVICES × ICF</p>
+    <h1 class="case-hero__title">
+      <span class="line"><span>Power flows</span></span>
+      <span class="line"><span>both ways.</span></span>
+    </h1>
+    <p class="case-hero__sub">An electric vehicle is also a battery on wheels. ComEd commissioned a
+    study of what bi-directional (V2X) charging is worth — for emissions, for
+    grid reliability, and for the communities that usually get this technology
+    last. I led the design, pitch, and execution of the research, with the
+    support of my leadership and our partners at ICF and ComEd.</p>
+    <div class="case-meta">
+      <div class="case-meta__cell"><span class="k mono">ROLE</span><span class="v">Research Lead — study design, pitch, and execution</span></div>
+      <div class="case-meta__cell"><span class="k mono">CLIENT &amp; PARTNERS</span><span class="v">ComEd · Walker-Miller Energy Services, with ICF</span></div>
+      <div class="case-meta__cell"><span class="k mono">METHODS</span><span class="v">Prospective LCA (ISO 14040/14044), Monte Carlo sensitivity, GIS-based MCDA with AHP + TOPSIS</span></div>
+      <div class="case-meta__cell"><span class="k mono">STATUS</span><span class="v">April–December 2025 · completed · final deliverables with ComEd</span></div>
+    </div>
+  </section>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The question</h2>
+      <div class="case-body">
+        <p>When an EV can push power back out — to the grid (V2G), a home
+        (V2H), or a building (V2B) — it becomes backup power and a
+        grid-flexibility resource. ComEd wanted to know whether that's
+        actually good for the environment compared with the alternatives,
+        and how to deploy it so that low-income and environmental-justice
+        communities benefit instead of being passed over.</p>
+        <p class="pull">I pitched a study that answers both questions in one
+        framework: a prospective life cycle assessment for the environmental
+        side, and a spatial equity analysis for the social side.</p>
+        <p>The hard part is the word "prospective." V2X is around technology
+        readiness level 5 today; the study has to estimate impacts out to
+        2040, on a grid whose fuel mix is changing every year. That meant
+        modeling hourly grid emissions under three futures — base,
+        optimistic, and pessimistic — and being honest about uncertainty
+        with Monte Carlo sensitivity analysis.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STUDY AT A GLANCE -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">The Study at a Glance</span>
+      <span class="viz__note">Per the statement of work and midpoint memo</span>
+    </div>
+    <div class="viz__body">
+      <div class="sgrid">
+        <div class="sgrid__cell"><span class="sgrid__num">5</span><span class="sgrid__label">SYSTEMS MODELED — V2G · V2H · V2B · BESS · MANAGED CHARGING</span></div>
+        <div class="sgrid__cell"><span class="sgrid__num">3</span><span class="sgrid__label">GRID FUTURES — BASE · OPTIMISTIC · PESSIMISTIC</span></div>
+        <div class="sgrid__cell"><span class="sgrid__num">15yr</span><span class="sgrid__label">HORIZON — 2025 TO 2040, HOURLY EMISSION FACTORS</span></div>
+        <div class="sgrid__cell"><span class="sgrid__num">ISO</span><span class="sgrid__label">14040 / 14044 COMPLIANT pLCA</span></div>
+        <div class="sgrid__cell"><span class="sgrid__num">1kWh</span><span class="sgrid__label">FUNCTIONAL UNIT — NET ENERGY DISCHARGED (PER SYSTEM)</span></div>
+      </div>
+      <p class="exnote" style="margin-top:1.1rem">DATA: NREL CAMBIUM 2024 HOURLY SCENARIOS · EPA eGRID 2023 · ARGONNE GREET · EPA EJSCREEN · DOE LEAD · ILLINOIS EIEC · COMED EQUITY REPORTS</p>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>Designing the study</h2>
+      <div class="case-body">
+        <p>The pitch had to convince a utility that a designer-led research
+        team could deliver an engineering-grade assessment. The design
+        choices did that work. We defined a functional unit per system (one
+        kilowatt-hour of net energy discharged), drew the boundary at the
+        use phase — charging, discharging, inverter losses, battery
+        degradation, round-trip efficiency — and committed to documenting
+        every assumption in a pedigree matrix so reviewers could judge data
+        quality for themselves.</p>
+        <p>Each scenario got real numbers: discharge cycles per year,
+        energy per discharge, round-trip efficiency, end-of-life battery
+        capacity, and how much degradation is fairly attributed to V2X use
+        rather than ordinary driving.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- METHOD FLOW -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">The pLCA — Four Phases, April to October</span>
+      <span class="viz__note">ISO 14040 / 14044 · per the SOW</span>
+    </div>
+    <div class="viz__body">
+      <div class="flow">
+        <div class="flow__step"><span class="flow__num">01 — GOAL &amp; SCOPE</span><h3>Define what counts</h3><p>Functional units, system boundaries, and impact categories (climate, air quality, resource efficiency, human health), finalized with ComEd.</p></div>
+        <div class="flow__step"><span class="flow__num">02 — INVENTORY</span><h3>Build the dataset</h3><p>Pilot and field data where available; GREET, eGRID, and Cambium projections adjusted for a changing grid; every assumption logged in a pedigree matrix.</p></div>
+        <div class="flow__step"><span class="flow__num">03 — IMPACT</span><h3>Quantify the effects</h3><p>IPCC AR6 factors for greenhouse gases; EPA TRACI 2.2 for air quality and human health. Outputs expressed per functional unit so systems compare directly.</p></div>
+        <div class="flow__step"><span class="flow__num">04 — INTERPRET</span><h3>Find what matters</h3><p>Monte Carlo runs across scenarios, hotspot identification, and integration with the equity analysis to produce recommendations ComEd can act on.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>What the data shows</h2>
+      <div class="case-body">
+        <p>All five flexible-energy systems reduce emissions, and the
+        rankings are consistent: V2G avoids the most carbon per
+        kilowatt-hour today. The twist is the trend. As the grid gets
+        cleaner, the bi-directional systems' climate benefit shrinks —
+        while managed charging's benefit grows roughly five-fold by 2040,
+        because its value comes from shifting load into increasingly clean
+        off-peak hours.</p>
+        <p>The data also surfaced a caution: in the optimistic 2030
+        scenario, peak emissions briefly fall below off-peak in some hours.
+        A time-of-use program calibrated for today's grid could shift load
+        into <em>dirtier</em> hours. Explore the numbers:</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- EMISSIONS EXPLORER -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">Emissions Avoided per kWh — Midpoint Results</span>
+      <span class="viz__note">kg CO₂e per functional unit · midpoint memo values</span>
+    </div>
+    <div class="viz__body">
+      <div class="tabrow" role="tablist" aria-label="System">
+        <button class="vtab on" data-sys="v2g" type="button">V2G</button>
+        <button class="vtab" data-sys="v2h" type="button">V2H</button>
+        <button class="vtab" data-sys="v2b" type="button">V2B</button>
+        <button class="vtab" data-sys="bess" type="button">Stationary BESS</button>
+        <button class="vtab" data-sys="mc" type="button">Managed charging</button>
+      </div>
+      <div class="tabrow" role="tablist" aria-label="Scenario">
+        <button class="vtab on" data-scen="0" type="button">Base</button>
+        <button class="vtab" data-scen="1" type="button">Optimistic grid</button>
+        <button class="vtab" data-scen="2" type="button">Pessimistic grid</button>
+      </div>
+      <div class="exbars" id="exbars"></div>
+      <span class="exnote" id="exnote"></span>
+    </div>
+  </div>
+
+  <!-- GRID TRAJECTORY -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">Why the Benefit Changes — Marginal Grid Intensity, 2025→2040</span>
+      <span class="viz__note">kg CO₂e/kWh · NREL Cambium · 2030 base interpolated</span>
+    </div>
+    <div class="viz__body">
+      <div class="tabrow" role="tablist" aria-label="Grid scenario">
+        <button class="vtab on" data-traj="base" type="button">Base</button>
+        <button class="vtab" data-traj="opt" type="button">Optimistic</button>
+        <button class="vtab" data-traj="pess" type="button">Pessimistic</button>
+      </div>
+      <svg class="traj" id="trajsvg" viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Line chart of peak and off-peak marginal grid carbon intensity declining from 2025 to 2040">
+        <line class="axis" x1="60" y1="20" x2="60" y2="250"/>
+        <line class="axis" x1="60" y1="250" x2="650" y2="250"/>
+        <text x="14" y="30">0.8</text><text x="14" y="140">0.4</text><text x="14" y="253">0.0</text>
+        <text x="80" y="272">2025</text><text x="255" y="272">2030</text><text x="430" y="272">2035</text><text x="605" y="272">2040</text>
+        <polyline class="gline gline--peak" id="lpeak" points=""/>
+        <polyline class="gline gline--off" id="loff" points=""/>
+        <g id="trajdots"></g>
+      </svg>
+      <div class="trajlegend">
+        <span><span class="sw" style="background:#00D98B"></span>PEAK HOURS — WHAT DISCHARGING DISPLACES</span>
+        <span><span class="sw" style="background:rgba(236,235,230,0.6)"></span>OFF-PEAK — WHAT CHARGING CONSUMES</span>
+      </div>
+      <span class="exnote" id="trajnote"></span>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The equity half</h2>
+      <div class="case-body">
+        <p>Environmental benefit means little if the technology lands only
+        in wealthy zip codes. The second half of the study was a GIS-based
+        multi-criteria decision analysis of ComEd's service territory:
+        socio-economic criteria weighted with an analytical hierarchy
+        process, mapped, and ranked with TOPSIS to find the best sites for
+        equitable V2X deployment — with specific attention to Illinois'
+        environmental-justice, R3, and low-income designations.</p>
+        <p>The atlas below is a working recreation of that analysis built
+        from the project's actual data layers: ComEd-territory zip codes,
+        census tracts bridged through the HUD crosswalk, DOE LEAD energy
+        burden, the 21 peaker plants in ComEd territory with their emissions
+        and EJ demographics, and EV registrations per zip from the Illinois
+        Secretary of State (2019–2025), projected forward with a logistic
+        growth model. The working hypothesis: keeping peaker plants turned
+        off delivers its biggest social impact in EIEC communities — the
+        places where high energy burden, peaker pollution, and a growing
+        dispatchable EV fleet overlap.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PEAKER DISPLACEMENT ATLAS -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">Peaker Displacement Atlas — ComEd Territory, 2025→2040</span>
+      <span class="viz__note">Built from the project's data layers · analytical recreation</span>
+    </div>
+    <div class="viz__body">
+      <div class="atctl">
+        <div class="tabrow" style="margin:0" role="tablist" aria-label="Adoption scenario">
+          <button class="vtab on" data-as="0" type="button">Base</button>
+          <button class="vtab" data-as="1" type="button">Optimistic</button>
+          <button class="vtab" data-as="2" type="button">Pessimistic</button>
+        </div>
+        <div class="atslider">
+          <input type="range" id="atyear" min="2025" max="2040" value="2030" step="1" aria-label="Projection year">
+          <output id="atyearout">2030</output>
+        </div>
+        <button class="vtab on" id="athb" type="button">EIEC focus</button>
+        <button class="vtab on" id="atpk" type="button">Peakers</button>
+      </div>
+      <div class="atwrap">
+        <div>
+          <svg class="atmap" id="atmap" viewBox="0 0 760 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Map of ComEd territory in northern Illinois: zip codes drawn as circles sized by projected EV fleet and shaded by peaker-displacement social impact, with peaker plants marked as triangles"></svg>
+          <div class="atlegend">
+            <span>● ZIP — SIZE = PROJECTED EVs · BRIGHTNESS = SOCIAL-IMPACT SCORE</span>
+            <span style="color:#FFC65D">◯ TOP-QUARTILE ENERGY BURDEN (EIEC FOCUS)</span>
+            <span style="color:#ff5d5d">▲ PEAKER PLANT — SIZE = CO₂e</span>
+          </div>
+        </div>
+        <div>
+          <div class="atstats">
+            <div><span class="n" id="at-ev">—</span><span class="l">PROJECTED EVs IN TERRITORY</span></div>
+            <div><span class="n" id="at-mwh">—</span><span class="l">DISPATCHABLE MWh PER PEAK EVENT*</span></div>
+          </div>
+          <p class="mono" style="font-size:0.6rem;letter-spacing:0.12em;color:var(--ink-dim);margin:0 0 0.5rem">HIGHEST SOCIAL-IMPACT ZIP CODES</p>
+          <ol class="atlist" id="atlist"></ol>
+          <div class="athyp" id="athyp"></div>
+        </div>
+      </div>
+      <p class="exnote" style="margin-top:1.2rem">SOURCES: ILSOS EV REGISTRATIONS BY ZIP (2019–2025) · HUD ZIP–TRACT CROSSWALK · DOE LEAD ENERGY BURDEN · COMED-TERRITORY PEAKER DATASET (21 PLANTS) · AFDC STATIONS FOR ZIP CENTROIDS. *ASSUMES 10 kWh DISPATCHED PER PARTICIPATING EV; PARTICIPATION 10% / 20% / 5% BY SCENARIO. ZIPS WITHOUT STATION-DERIVED CENTROIDS ARE PLACED NEAR THEIR COUNTY CENTER.</p>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The outcome</h2>
+      <div class="case-body">
+        <div class="outcomes">
+          <div class="outcome"><span class="outcome__num">60</span><span class="outcome__label mono">SCENARIO-YEAR DATAPOINTS IN THE pLCA RESULTS</span></div>
+          <div class="outcome"><span class="outcome__num">~0.20</span><span class="outcome__label mono">KG CO₂e AVOIDED PER kWh — V2G, 2025 BASE CASE</span></div>
+          <div class="outcome"><span class="outcome__num">5×</span><span class="outcome__label mono">GROWTH IN MANAGED CHARGING'S BENEFIT BY 2040</span></div>
+        </div>
+        <p style="margin-top:2rem">The study completed in December 2025.
+        The full pLCA, the spatial equity MCDA, scenario integration, and
+        final recommendations were delivered to ComEd, along with the
+        ArcGIS data layers, Power BI dashboards, survey instruments, and
+        outreach materials specified in the statement of work. (The final
+        deliverables are ComEd's, so the quantitative results shown on this
+        page come from the midpoint technical memo.) The strategic findings
+        held: bi-directional charging's climate case is strongest in the
+        next decade, its resilience case is durable, and time-of-use
+        programs will need recalibration as the grid changes.</p>
+        <p>Years of embedding with engineers is what made this one possible:
+        I scoped the methodology, made the pitch, and ran the study, backed
+        by my leadership and our partners at ICF and ComEd.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="case-next">
+    <span class="k mono">NEXT CASE STUDY — 02 / 07</span>
+    <a class="case-next__link" href="claws.html">CLAWS — ATLAS &amp; VEGA →</a>
+  </section>
+</main>
+
+<p class="case-disclaimer mono">CONTENT BASED ON THE PROJECT STATEMENT OF WORK AND MIDPOINT TECHNICAL MEMO; THE STUDY COMPLETED IN DECEMBER 2025 AND FINAL DELIVERABLES ARE OWNED BY COMED. THE ATLAS IS AN ANALYTICAL RECREATION FROM THE PROJECT'S SOURCE DATA LAYERS, NOT THE DELIVERED MCDA. 2030 BASE-CASE GRID VALUES INTERPOLATED.</p>
+
+<footer class="footer">
+  <p class="mono">© 2026 MATTHEW GARVIN · <a href="https://vinsettastudio.com/" target="_blank" rel="noopener">DESIGNED BY VINSETTA STUDIO LLC</a></p>
+  <div class="footer__links mono">
+    <a href="https://www.linkedin.com/in/matthew-garvin-7260724a/" target="_blank" rel="noopener">LINKEDIN</a>
+    <a href="https://github.com/mtthwgrvn" target="_blank" rel="noopener">GITHUB</a>
+    <a href="https://mtthwx.com" target="_blank" rel="noopener">BLOG</a>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="js/main.js"></script>
+<script src="js/atlas.js"></script>
+<script>
+(function () {
+  /* ---------- emissions explorer (values from the midpoint memo, kg CO2e avoided per FU) ---------- */
+  var YEARS = [2025, 2030, 2035, 2040];
+  var DATA = {
+    v2g:  { name: 'V2G',  s: [[0.1983,0.1636,0.1232,0.0911],[0.1345,0.0631,0.0401,0.0249],[0.2514,0.1950,0.1610,0.1466]] },
+    v2h:  { name: 'V2H',  s: [[0.1678,0.1293,0.0883,0.0573],[0.1065,0.0381,0.0163,0.0076],[0.2030,0.1554,0.1190,0.1009]] },
+    v2b:  { name: 'V2B',  s: [[0.1228,0.0886,0.0560,0.0344],[0.0536,0.0089,0.0039,0.0051],[0.1764,0.1360,0.0910,0.0766]] },
+    bess: { name: 'BESS', s: [[0.0898,0.0583,0.0305,0.0125],[0.0089,0.0031,0.0019,0.0028],[0.1504,0.1054,0.0628,0.0560]] },
+    mc:   { name: 'Managed charging', s: [[0.0221,0.0507,0.1003,0.1100],[0.0203,-0.0080,0.0945,0.1122],[0.0246,0.0676,0.0696,0.0924]] }
+  };
+  var NOTES = {
+    v2g: 'V2G AVOIDS THE MOST CARBON TODAY; THE BENEFIT SHRINKS AS THE GRID DECARBONIZES.',
+    v2h: 'V2H IS VALUED PRIMARILY FOR RESILIENCE — THE EMISSIONS BENEFIT IS A BONUS THAT FADES BY 2040.',
+    v2b: 'V2B FOLLOWS THE SAME PATTERN AT BUILDING SCALE.',
+    bess: 'STATIONARY BATTERIES SHOW THE SMALLEST PER-kWh BENEFIT OF THE DISCHARGING SYSTEMS.',
+    mc: 'THE OUTLIER: MANAGED CHARGING’S BENEFIT GROWS AS OFF-PEAK HOURS GET CLEANER. RED 2030 BAR = EMISSIONS ADDED IF TOU SHIFTS LOAD INTO DIRTIER HOURS.'
+  };
+  var sys = 'v2g', scen = 0, MAX = 0.26;
+  var exbars = document.getElementById('exbars'), exnote = document.getElementById('exnote');
+  function exRender() {
+    var vals = DATA[sys].s[scen];
+    exbars.innerHTML = vals.map(function (v, i) {
+      var neg = v < 0, w = Math.min(100, Math.abs(v) / MAX * 100);
+      return '<div class="exbar"><span class="exbar__year">' + YEARS[i] + '</span>' +
+        '<div class="exbar__track"><div class="exbar__fill' + (neg ? ' neg' : '') + '" style="width:' + w + '%"></div></div>' +
+        '<span class="exbar__val' + (neg ? ' neg' : '') + '">' + (neg ? '+' : '−') + Math.abs(v).toFixed(4) + ' kg</span></div>';
+    }).join('');
+    exnote.textContent = NOTES[sys];
+    document.querySelectorAll('[data-sys]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-sys') === sys); });
+    document.querySelectorAll('[data-scen]').forEach(function (b) { b.classList.toggle('on', +b.getAttribute('data-scen') === scen); });
+  }
+  document.querySelectorAll('[data-sys]').forEach(function (b) { b.addEventListener('click', function () { sys = b.getAttribute('data-sys'); exRender(); }); });
+  document.querySelectorAll('[data-scen]').forEach(function (b) { b.addEventListener('click', function () { scen = +b.getAttribute('data-scen'); exRender(); }); });
+  exRender();
+
+  /* ---------- grid trajectory ---------- */
+  var TRAJ = {
+    base: { off: [0.76, 0.66, 0.39, 0.37], peak: [0.78, 0.72, 0.49, 0.48], note: 'BASE CASE: THE PEAK/OFF-PEAK GAP PERSISTS — GAS PEAKERS STILL SET PEAK EMISSIONS THROUGH 2040.' },
+    opt:  { off: [0.76, 0.69, 0.31, 0.26], peak: [0.78, 0.68, 0.41, 0.37], note: 'OPTIMISTIC: BY 2030, PEAK BRIEFLY DIPS BELOW OFF-PEAK IN SOME HOURS — THE TOU CALIBRATION RISK.' },
+    pess: { off: [0.76, 0.63, 0.43, 0.41], peak: [0.78, 0.70, 0.50, 0.50], note: 'PESSIMISTIC: SLOWER DECARBONIZATION KEEPS MARGINAL EMISSIONS — AND V2X’S RELATIVE BENEFIT — HIGH.' }
+  };
+  var XS = [85, 260, 435, 610], Y0 = 250, YMAX = 0.85, H = 230;
+  function y(v) { return Y0 - (v / YMAX) * H; }
+  var lpeak = document.getElementById('lpeak'), loff = document.getElementById('loff'),
+      dots = document.getElementById('trajdots'), trajnote = document.getElementById('trajnote');
+  function trajRender(key) {
+    var d = TRAJ[key];
+    lpeak.setAttribute('points', d.peak.map(function (v, i) { return XS[i] + ',' + y(v); }).join(' '));
+    loff.setAttribute('points', d.off.map(function (v, i) { return XS[i] + ',' + y(v); }).join(' '));
+    dots.innerHTML = d.peak.map(function (v, i) {
+      return '<circle class="dot dot--peak" cx="' + XS[i] + '" cy="' + y(v) + '" r="4"/>';
+    }).join('') + d.off.map(function (v, i) {
+      return '<circle class="dot dot--off" cx="' + XS[i] + '" cy="' + y(v) + '" r="4"/>';
+    }).join('');
+    trajnote.textContent = d.note;
+    document.querySelectorAll('[data-traj]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-traj') === key); });
+  }
+  document.querySelectorAll('[data-traj]').forEach(function (b) { b.addEventListener('click', function () { trajRender(b.getAttribute('data-traj')); }); });
+  trajRender('base');
+
+  /* ---------- peaker displacement atlas ---------- */
+  (function () {
+    if (typeof window.ATLAS === 'undefined') return;
+    var A = window.ATLAS;
+    var RMULT = [1.0, 1.3, 0.55], PART = [0.10, 0.20, 0.05];
+    var scen = 0, year = 2030, showHB = true, showPK = true;
+    var LON0 = -90.45, LON1 = -87.35, LAT0 = 42.70, LAT1 = 40.90;
+    function px(lo) { return 20 + (lo - LON0) / (LON1 - LON0) * 720; }
+    function py(la) { return 16 + (LAT0 - la) / (LAT0 - LAT1) * 560; }
+    function fleet(e, K, r, t) { var Aa = K / Math.max(e, 1) - 1; return K / (1 + Aa * Math.exp(-r * RMULT[scen] * t)); }
+    function cfn(t) {
+      var mx = 0, m = {};
+      for (var c in A.counties) { var x = A.counties[c]; m[c] = fleet(x.e, x.K, x.r, t); if (m[c] > mx) mx = m[c]; }
+      for (c in m) m[c] /= mx;
+      return m;
+    }
+    var svg = document.getElementById('atmap'),
+        list = document.getElementById('atlist'),
+        hyp = document.getElementById('athyp');
+    var landmarks = [['CHICAGO', 41.88, -87.63], ['ROCKFORD', 42.27, -89.09], ['AURORA', 41.76, -88.32], ['JOLIET', 41.53, -88.08], ['WAUKEGAN', 42.36, -87.84]];
+    function render() {
+      var t = year - 2025, cf = cfn(t);
+      var rows = A.zips.map(function (z) {
+        var f = fleet(z.e, z.K, z.r, t);
+        var s = z.v * (0.25 + 0.75 * z.pb) * (cf[z.y] || 0.1);
+        return { z: z, f: f, s: s };
+      });
+      var smax = 0, ftot = 0;
+      rows.forEach(function (r) { if (r.s > smax) smax = r.s; ftot += r.f; });
+      /* map */
+      var out = '<path class="shore" d="M' + px(-87.80) + ',' + py(42.66) + ' L' + px(-87.82) + ',' + py(42.30) + ' L' + px(-87.60) + ',' + py(41.88) + ' L' + px(-87.52) + ',' + py(41.62) + '"/>';
+      landmarks.forEach(function (l) { out += '<text x="' + (px(l[2]) + 7) + '" y="' + (py(l[1]) - 6) + '">' + l[0] + '</text>'; });
+      rows.forEach(function (r) {
+        var rad = 1.6 + Math.sqrt(r.f) / 14;
+        if (rad > 14) rad = 14;
+        var op = 0.12 + 0.88 * (smax ? r.s / smax : 0);
+        out += '<circle class="zipdot' + (showHB && r.z.hb ? ' hbring' : '') + '" cx="' + px(r.z.lo).toFixed(1) + '" cy="' + py(r.z.la).toFixed(1) + '" r="' + rad.toFixed(1) + '" fill="rgba(0,217,139,' + op.toFixed(2) + ')"><title>' + r.z.z + ' — ' + r.z.c + ' (' + r.z.y + ')\nProjected EVs ' + year + ': ' + Math.round(r.f) + '\nEnergy burden: ' + r.z.eb + '% · impact score: ' + (smax ? (r.s / smax * 100).toFixed(0) : 0) + '/100' + (r.z.ap ? '\n(county-anchored position)' : '') + '</title></circle>';
+      });
+      if (showPK) A.peakers.forEach(function (p) {
+        var sz = 5 + Math.sqrt(p.co2) / 130;
+        if (sz > 16) sz = 16;
+        var x = px(p.lo), y = py(p.la);
+        out += '<path class="pkmark" d="M' + x + ',' + (y - sz) + ' L' + (x + sz * 0.9) + ',' + (y + sz * 0.7) + ' L' + (x - sz * 0.9) + ',' + (y + sz * 0.7) + ' Z"><title>' + p.n + ' (' + p.fuel + ', ' + p.mw + ' MW)\nCO₂e: ' + p.co2.toLocaleString() + ' · POC+LI avg: ' + p.ej + '%</title></path>';
+      });
+      svg.innerHTML = out;
+      /* side panel */
+      document.getElementById('at-ev').textContent = Math.round(ftot).toLocaleString();
+      document.getElementById('at-mwh').textContent = Math.round(ftot * PART[scen] * 10 / 1000).toLocaleString();
+      var top = rows.slice().sort(function (a, b) { return b.s - a.s; });
+      list.innerHTML = top.slice(0, 10).map(function (r) {
+        return '<li><span class="who">' + r.z.z + ' · ' + r.z.c + '<small>' + r.z.y + ' CO · EB ' + r.z.eb + '% · ' + Math.round(r.f) + ' EVs</small></span><span class="bar"><i style="width:' + (r.s / smax * 100).toFixed(0) + '%"></i></span></li>';
+      }).join('');
+      var hb20 = top.slice(0, 20).filter(function (r) { return r.z.hb; }).length;
+      hyp.textContent = hb20 + ' OF THE TOP 20 HIGHEST-IMPACT ZIPS ARE TOP-QUARTILE ENERGY-BURDEN COMMUNITIES — THE SOCIAL BENEFIT OF KEEPING PEAKERS OFF CONCENTRATES WHERE THE BURDEN ALREADY LIVES.';
+    }
+    document.querySelectorAll('[data-as]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        scen = +b.getAttribute('data-as');
+        document.querySelectorAll('[data-as]').forEach(function (x) { x.classList.toggle('on', x === b); });
+        render();
+      });
+    });
+    var yr = document.getElementById('atyear');
+    yr.addEventListener('input', function () { year = +yr.value; document.getElementById('atyearout').textContent = year; render(); });
+    document.getElementById('athb').addEventListener('click', function () { showHB = !showHB; this.classList.toggle('on', showHB); render(); });
+    document.getElementById('atpk').addEventListener('click', function () { showPK = !showPK; this.classList.toggle('on', showPK); render(); });
+    render();
+  })();
+
+  /* ---------- reveals ---------- */
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduced && typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+    document.querySelectorAll('.viz, .sgrid__cell, .flow__step').forEach(function (el) {
+      gsap.from(el, {
+        opacity: 0, y: 24, duration: 0.7, ease: 'power3.out',
+        scrollTrigger: { trigger: el, start: 'top 92%' }
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>

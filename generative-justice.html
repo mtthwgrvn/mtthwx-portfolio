@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- Generative Justice case study — rebuilt from "Artisanal Futuring" (Garvin, Eglash, Robinson, Robert, Guzdial, Bennett) and "Counter-hegemonic AI" (Routledge, 2023) -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generative Justice Lab · Matthew Garvin</title>
+<meta name="description" content="Case study: generative participatory design and counter-hegemonic AI with Detroit's artisan economy — NSF-funded research at the University of Michigan.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+:root { --accent: #9BE564; }
+
+/* ---------- shared viz panel ---------- */
+.viz {
+  margin: clamp(3rem, 7vw, 5rem) var(--pad);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: var(--bg-2);
+  overflow: hidden;
+}
+.viz__head {
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--hairline);
+}
+.viz__title { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+.viz__note { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); text-align: right; }
+.viz__body { padding: clamp(1.2rem, 3vw, 2.5rem); }
+
+/* ---------- value flow svg ---------- */
+.gjsvg { width: 100%; height: auto; display: block; }
+.gjsvg text { font-family: "IBM Plex Mono", monospace; }
+.gjsvg .box { fill: rgba(8,8,14,0.6); stroke: rgba(236,235,230,0.18); }
+.gjsvg .box--bad { stroke: rgba(255,93,93,0.55); }
+.gjsvg .box--good { stroke: rgba(155,229,100,0.6); }
+.gjsvg .lbl { fill: #ecebe6; font-size: 11px; letter-spacing: 0.08em; }
+.gjsvg .sub { fill: #9b9a93; font-size: 8.5px; letter-spacing: 0.06em; }
+.gjsvg .tag { font-size: 9px; letter-spacing: 0.14em; }
+.gjsvg .tag--bad { fill: #ff5d5d; }
+.gjsvg .tag--good { fill: #9BE564; }
+.gjsvg .wire { fill: none; stroke-width: 1.4; stroke-dasharray: 5 5; animation: gjwire 1.4s linear infinite; }
+.gjsvg .wire--up { stroke: rgba(255,93,93,0.6); }
+.gjsvg .wire--trickle { stroke: rgba(255,198,93,0.6); stroke-width: 0.9; animation-duration: 2.8s; }
+.gjsvg .wire--loop { stroke: rgba(155,229,100,0.65); }
+@keyframes gjwire { to { stroke-dashoffset: -10; } }
+@media (prefers-reduced-motion: reduce) { .gjsvg .wire { animation: none; } }
+
+/* scrollytelling states for the value-flow diagram (live mode only;
+   JS off / reduced motion shows both economies at full opacity) */
+.gjsvg .econ { transition: opacity 0.6s ease; }
+.scrolly.is-live [data-state="0"] .econ--circulate,
+.scrolly.is-live [data-state="1"] .econ--circulate { opacity: 0.4; }
+.scrolly.is-live [data-state="2"] .econ--extract { opacity: 0.4; }
+.scrolly.is-live [data-state="1"] .wire--trickle { stroke: rgba(255,198,93,0.95); stroke-width: 1.8; }
+
+/* ---------- GPD phases ---------- */
+.flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.flow__step {
+  border: 1px solid var(--hairline); border-radius: 6px;
+  background: rgba(8,8,14,0.5);
+  padding: 1rem 0.9rem 1.1rem;
+  position: relative;
+}
+.flow__step::after {
+  content: "→"; position: absolute; right: -13px; top: 50%; transform: translateY(-50%);
+  color: var(--accent); font-size: 0.9rem; z-index: 1;
+}
+.flow__step:last-child::after { content: "↺"; right: 0.7rem; top: 0.8rem; transform: none; }
+.flow__num { font-family: var(--font-mono); font-size: 0.62rem; color: var(--accent); letter-spacing: 0.12em; display: block; margin-bottom: 0.5rem; }
+.flow__step h3 { font-size: 0.92rem; font-weight: 600; margin: 0 0 0.4rem; color: var(--ink); }
+.flow__step p { font-size: 0.74rem; color: var(--ink-dim); margin: 0; line-height: 1.5; }
+@media (max-width: 900px) {
+  .flow { grid-template-columns: 1fr; }
+  .flow__step::after { content: "↓"; right: auto; left: 50%; top: auto; bottom: -16px; transform: translateX(-50%); }
+  .flow__step:last-child::after { content: "↺"; left: auto; right: 0.7rem; bottom: auto; }
+}
+
+/* ---------- oppositional identity grid ---------- */
+.oppgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--hairline); border: 1px solid var(--hairline); margin-top: 0.5rem; }
+.oppgrid__cell { background: var(--bg); padding: 1.3rem 1.4rem; }
+.oppgrid__cell .yes { color: var(--accent); font-weight: 600; font-size: 1.02rem; display: block; }
+.oppgrid__cell .no { color: var(--ink-dim); font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; display: block; margin-top: 0.45rem; }
+.oppgrid__cell .no s { text-decoration-color: rgba(255,93,93,0.7); }
+@media (max-width: 560px) { .oppgrid { grid-template-columns: 1fr; } }
+
+/* ---------- kente scanner ---------- */
+.kente { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1.2rem, 3vw, 2.4rem); align-items: start; }
+@media (max-width: 820px) { .kente { grid-template-columns: 1fr; } }
+.swatches { display: flex; flex-direction: column; gap: 1rem; }
+.swatch {
+  border: 1px solid var(--hairline); border-radius: 8px; overflow: hidden;
+  cursor: pointer; background: var(--bg);
+  transition: border-color 0.25s, transform 0.25s;
+  padding: 0; text-align: left; width: 100%;
+}
+.swatch:hover { transform: translateY(-2px); }
+.swatch.on { border-color: var(--accent); }
+.swatch__cloth { height: 86px; }
+/* handwoven: irregular stripe rhythm */
+.swatch--a .swatch__cloth {
+  background:
+    repeating-linear-gradient(90deg, #c9a227 0 26px, #1b4d2e 26px 38px, #c9a227 38px 57px, #8c1f1f 57px 73px, #10100e 73px 79px, #c9a227 79px 118px, #1b4d2e 118px 127px, #8c1f1f 127px 151px, #10100e 151px 158px),
+    repeating-linear-gradient(0deg, transparent 0 9px, rgba(0,0,0,0.22) 9px 11px, transparent 11px 23px, rgba(255,255,255,0.05) 23px 24px);
+  background-blend-mode: multiply;
+}
+/* factory: perfectly uniform */
+.swatch--b .swatch__cloth {
+  background:
+    repeating-linear-gradient(90deg, #c9a227 0 24px, #1b4d2e 24px 48px, #8c1f1f 48px 72px, #10100e 72px 80px),
+    repeating-linear-gradient(0deg, transparent 0 10px, rgba(0,0,0,0.15) 10px 12px);
+}
+.swatch__label { display: flex; justify-content: space-between; padding: 0.7rem 0.9rem; font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-dim); }
+.swatch.on .swatch__label { color: var(--accent); }
+
+.scanresult { border: 1px solid var(--hairline); border-radius: 8px; background: rgba(8,8,14,0.5); padding: 1.4rem; min-height: 270px; }
+.scanresult__status { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.13em; text-transform: uppercase; margin-bottom: 1rem; }
+.scanresult__status.good { color: var(--accent); }
+.scanresult__status.bad { color: #ff5d5d; }
+.confbar { height: 10px; border-radius: 999px; background: rgba(236,235,230,0.07); overflow: hidden; margin: 0.4rem 0 1.2rem; }
+.confbar__fill { height: 100%; border-radius: 999px; transition: width 0.9s cubic-bezier(0.65,0,0.35,1), background 0.3s; }
+.scanresult h3 { font-size: 1.15rem; font-weight: 600; margin: 0 0 0.3rem; }
+.scanresult p { font-size: 0.85rem; color: var(--ink-dim); margin: 0 0 1.1rem; }
+.provenance { display: flex; flex-direction: column; gap: 7px; }
+.provenance a {
+  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase;
+  border: 1px solid var(--hairline); border-radius: 999px; padding: 0.5rem 0.9rem;
+  color: var(--ink); transition: border-color 0.25s, color 0.25s;
+}
+.provenance a:hover { border-color: var(--accent); color: var(--accent); }
+.provenance.disabled a { opacity: 0.35; pointer-events: none; }
+
+/* ---------- cohort stats ---------- */
+.cohort { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--hairline); border: 1px solid var(--hairline); }
+.cohort__cell { background: var(--bg); padding: 1.5rem 1.3rem; }
+.cohort__num { display: block; font-size: clamp(1.9rem, 3.6vw, 2.8rem); font-weight: 600; line-height: 1; color: var(--accent); letter-spacing: -0.02em; }
+.cohort__label { display: block; margin-top: 0.6rem; font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
+@media (max-width: 700px) { .cohort { grid-template-columns: 1fr 1fr; } }
+.craftchips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 1.2rem; }
+.craftchips span {
+  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase;
+  border: 1px solid var(--hairline); border-radius: 999px; padding: 0.45rem 0.85rem; color: var(--ink-dim);
+}
+
+/* ---------- scale tiers ---------- */
+.tiers { display: flex; flex-direction: column; gap: 10px; }
+.tier { display: grid; grid-template-columns: 9rem 1fr; gap: 1.2rem; border: 1px solid var(--hairline); border-radius: 6px; background: rgba(8,8,14,0.5); padding: 1.2rem 1.3rem; }
+.tier__scale { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--accent); padding-top: 0.2rem; }
+.tier h3 { font-size: 1rem; font-weight: 600; margin: 0 0 0.35rem; }
+.tier p { font-size: 0.86rem; color: var(--ink-dim); margin: 0; }
+@media (max-width: 640px) { .tier { grid-template-columns: 1fr; gap: 0.5rem; } }
+
+/* ---------- CSDT recreations ---------- */
+canvas.csdt { width: 100%; height: auto; display: block; border-radius: 6px; border: 1px solid var(--hairline); background: #0a0a10; }
+.ctrls { display: flex; flex-wrap: wrap; gap: 1.1rem 1.6rem; margin-top: 1.1rem; align-items: flex-end; }
+.ctrl { display: flex; flex-direction: column; gap: 0.4rem; min-width: 130px; flex: 1; }
+.ctrl label { font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-dim); display: flex; justify-content: space-between; }
+.ctrl label output { color: var(--accent); }
+.ctrl input[type="range"] { accent-color: var(--accent); width: 100%; }
+.ctrl select {
+  background: var(--bg); color: var(--ink); border: 1px solid var(--hairline); border-radius: 6px;
+  font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.08em; padding: 0.45rem 0.6rem;
+}
+.ctrl--check { flex: 0; min-width: auto; flex-direction: row; align-items: center; gap: 0.5rem; }
+.ctrl--check label { color: var(--ink-dim); }
+.ctrl--check input { accent-color: var(--accent); }
+.csdtbtn {
+  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 0.55rem 1rem; border-radius: 999px;
+  background: transparent; color: var(--accent);
+  border: 1px solid var(--accent); cursor: pointer;
+  transition: all 0.25s;
+}
+.csdtbtn:hover { background: var(--accent); color: var(--bg); }
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 700px) { .compare { grid-template-columns: 1fr; } }
+.compare__col { display: flex; flex-direction: column; gap: 10px; }
+.compare__card { border: 1px solid var(--hairline); border-radius: 6px; background: rgba(8,8,14,0.5); padding: 0.9rem 1rem; }
+.compare__card .k { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; display: block; margin-bottom: 0.45rem; }
+.compare__card .k.good { color: var(--accent); }
+.compare__card .k.bad { color: #ff5d5d; }
+.compare__card p { font-size: 0.78rem; color: var(--ink-dim); margin: 0; line-height: 1.55; font-family: var(--font-mono); }
+</style>
+</head>
+<body data-page="case">
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor" aria-hidden="true"></div>
+
+<header class="nav">
+  <a class="nav__logo" href="index.html">MG<sup>®</sup></a>
+  <nav class="nav__links" aria-label="Primary">
+    <a href="index.html#work">Work</a>
+    <a href="index.html#about">About</a>
+    <a href="index.html#contact">Contact</a>
+  </nav>
+  <div class="nav__meta mono">CASE STUDY — 07 / 07</div>
+</header>
+
+<main id="main">
+  <section class="case-hero">
+    <p class="case-hero__label mono">GENERATIVE JUSTICE LAB · UNIVERSITY OF MICHIGAN · NSF IIS-2128756</p>
+    <h1 class="case-hero__title">
+      <span class="line"><span>Keeping value</span></span>
+      <span class="line"><span>where it's made.</span></span>
+    </h1>
+    <p class="case-hero__sub">"Race, Gender and Class Equity in the Future of Work: Automation for the
+    Artisanal Economy" — an NSF-funded research program asking whether AI and
+    automation can amplify, rather than extract, the value created by Detroit's
+    artisan entrepreneurs. My contribution: generative participatory design with
+    20 artisans, and a published theory of counter-hegemonic AI.</p>
+    <div class="case-meta">
+      <div class="case-meta__cell"><span class="k mono">ROLE</span><span class="v">Design Researcher · first author</span></div>
+      <div class="case-meta__cell"><span class="k mono">TEAM</span><span class="v">w/ Ron Eglash, Kwame Porter Robinson, Lionel Robert, Mark Guzdial, Audrey Bennett</span></div>
+      <div class="case-meta__cell"><span class="k mono">METHODS</span><span class="v">Generative participatory design, semi-structured interviews, pop-up makerspace workshop, value mapping</span></div>
+      <div class="case-meta__cell"><span class="k mono">OUTCOME</span><span class="v">Routledge chapter (2023) · Artisanal Futures workshop findings · platform concepts in development</span></div>
+    </div>
+  </section>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The challenge</h2>
+      <div class="case-body">
+        <p>Artisanal labor — employee-owned crafting, braiding, repair, urban
+        farming — has high job satisfaction, higher-quality products, and
+        sustainable practices, and it's one of the most race- and
+        gender-diverse business sectors in the U.S. It is also, often, a
+        low-income profession. Meanwhile the economics of automation run the
+        wrong way: the last 30 years show stronger labor displacement and
+        weaker reinstatement than the decades before.</p>
+        <p class="pull">Debias the model and you only change which faces the
+        harm lands on — the extraction underneath keeps running. The lab's
+        question was whether AI could be built to work differently that far
+        down.</p>
+        <p>The lab's framework, <strong>generative justice</strong>, names a
+        different success metric: "the universal right to generate
+        unalienated value and directly participate in its benefits; the
+        rights of value generators to create their own conditions of
+        production; and the rights of communities of value generation to
+        nurture self-sustaining paths for its circulation." The design
+        question follows: what does AI look like when it's built to
+        circulate value back to its source?</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXTRACTION VS CIRCULATION — scrollytelling -->
+  <figure class="scrolly" data-scrolly>
+    <div class="scrolly__viz">
+      <div class="viz">
+        <div class="viz__head">
+          <span class="viz__title">Two Economies of Value</span>
+          <span class="viz__note">Extraction from above vs. circulation from below</span>
+        </div>
+        <div class="viz__body" style="padding-bottom:1.4rem">
+          <svg class="gjsvg" viewBox="0 0 920 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagram contrasting platform extraction, where value flows up from makers to a platform with only a thin trickle returning, against generative circulation, where value cycles between maker, buyers, community, and ecosystem">
+            <!-- LEFT: extraction -->
+            <g class="econ econ--extract">
+              <text class="tag tag--bad" x="40" y="32">PLATFORM CAPITALISM — ALIENATED VALUE, EXTRACTED FROM ABOVE</text>
+              <rect class="box box--bad" x="130" y="50" width="200" height="54" rx="6"/>
+              <text class="lbl" text-anchor="middle" x="230" y="69">THE PLATFORM</text>
+              <text class="sub" text-anchor="middle" x="230" y="84">fees · rank games</text>
+              <text class="sub" text-anchor="middle" x="230" y="96">data harvest · "artisan™" branding</text>
+              <rect class="box" x="40" y="270" width="110" height="46" rx="6"/>
+              <text class="lbl" text-anchor="middle" x="95" y="291" font-size="9.5">BRAIDER</text>
+              <text class="sub" text-anchor="middle" x="95" y="305">cosmetology</text>
+              <rect class="box" x="175" y="270" width="110" height="46" rx="6"/>
+              <text class="lbl" text-anchor="middle" x="230" y="291" font-size="9.5">WEAVER</text>
+              <text class="sub" text-anchor="middle" x="230" y="305">textiles</text>
+              <rect class="box" x="310" y="270" width="110" height="46" rx="6"/>
+              <text class="lbl" text-anchor="middle" x="365" y="291" font-size="9.5">GROWER</text>
+              <text class="sub" text-anchor="middle" x="365" y="305">urban farm</text>
+              <path class="wire wire--up" d="M95 270 C 95 180, 170 140, 200 100"/>
+              <path class="wire wire--up" d="M230 270 C 230 200, 230 160, 230 100"/>
+              <path class="wire wire--up" d="M365 270 C 365 180, 290 140, 260 100"/>
+              <path class="wire wire--trickle" d="M255 100 C 300 170, 340 220, 372 268"/>
+              <text class="sub" x="320" y="196" fill="#ffc65d">trickle back</text>
+              <text class="sub" x="60" y="170" fill="#ff5d5d">value up</text>
+            </g>
+
+            <!-- RIGHT: circulation -->
+            <g class="econ econ--circulate">
+              <text class="tag tag--good" x="520" y="32">GENERATIVE JUSTICE — UNALIENATED VALUE, CIRCULATED FROM BELOW</text>
+              <rect class="box box--good" x="640" y="60" width="150" height="44" rx="6"/>
+              <text class="lbl" text-anchor="middle" x="715" y="80" font-size="10">MAKER</text>
+              <text class="sub" text-anchor="middle" x="715" y="94">craft · skill · story</text>
+              <rect class="box box--good" x="760" y="170" width="150" height="44" rx="6"/>
+              <text class="lbl" text-anchor="middle" x="835" y="190" font-size="10">BUYERS</text>
+              <text class="sub" text-anchor="middle" x="835" y="204">provenance · fair price</text>
+              <rect class="box box--good" x="640" y="282" width="150" height="44" rx="6"/>
+              <text class="lbl" text-anchor="middle" x="715" y="302" font-size="10">COMMUNITY</text>
+              <text class="sub" text-anchor="middle" x="715" y="316">skills taught forward</text>
+              <rect class="box box--good" x="520" y="170" width="150" height="44" rx="6"/>
+              <text class="lbl" text-anchor="middle" x="595" y="190" font-size="10">ECOSYSTEM</text>
+              <text class="sub" text-anchor="middle" x="595" y="204">materials · commons</text>
+              <path class="wire wire--loop" d="M790 104 C 820 125, 835 145, 835 170"/>
+              <path class="wire wire--loop" d="M835 214 C 835 245, 815 265, 790 282"/>
+              <path class="wire wire--loop" d="M640 304 C 605 290, 590 250, 593 214"/>
+              <path class="wire wire--loop" d="M595 170 C 597 135, 615 110, 640 88"/>
+              <text class="sub" text-anchor="middle" x="715" y="240" fill="#9BE564">value circulates<tspan x="715" dy="13">coopetition · mutual aid · reuse</tspan></text>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="scrolly__steps">
+      <div class="scrolly__step" data-state="0">
+        <span class="s-num">Economy 01</span>
+        <h3>Value flows up</h3>
+        <p>In platform capitalism the braider, the weaver, and the grower each feed a
+        platform above them — fees, ranking games, data harvest, "artisan™" branding.
+        The work happens at the bottom; the value collects at the top.</p>
+      </div>
+      <div class="scrolly__step" data-state="1">
+        <span class="s-num">The catch</span>
+        <h3>Only a trickle comes back</h3>
+        <p>What returns to the makers is thin — a fraction of what their craft, skill,
+        and story generated. Debiasing the model doesn't touch this; the extraction
+        underneath keeps running.</p>
+      </div>
+      <div class="scrolly__step" data-state="2">
+        <span class="s-num">Economy 02</span>
+        <h3>Value circulates instead</h3>
+        <p>Generative justice points the other way. Value cycles between maker, buyers,
+        community, and the ecosystem the work depends on: coopetition, mutual aid,
+        skills taught forward, materials returned to the commons.</p>
+      </div>
+      <div class="scrolly__step" data-state="3">
+        <span class="s-num">The design question</span>
+        <h3>Which loop does the tool serve?</h3>
+        <p>Side by side, the choice is concrete. Every automation decision either feeds
+        the extraction above or strengthens the circulation below. That is the question
+        the lab built AI to answer.</p>
+      </div>
+    </div>
+  </figure>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The method</h2>
+      <div class="case-body">
+        <p>Needs-based participatory design starts by cataloguing what a
+        community lacks. Assets-based design starts from what it already has.
+        Either way, the power structure around it can come out untouched. We
+        developed <strong>Generative Participatory Design (GPD)</strong> — a
+        four-phase method: start with what the community values, map where
+        value is being taken from them, then co-design responses
+        together.</p>
+        <p>We also widened who counts as an artisan: any work with creative
+        autonomy, motivated by quality, with some economic independence.
+        That definition deliberately includes Black beauty shops,
+        braidologists, auto detailers, neighborhood repair shops, and urban
+        growers — sectors with deep counter-hegemonic histories that
+        "maker culture" routinely overlooks.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- GPD PHASES -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">Generative Participatory Design — Four Phases</span>
+      <span class="viz__note">The cycle repeats in partnership with the community</span>
+    </div>
+    <div class="viz__body">
+      <div class="flow">
+        <div class="flow__step"><span class="flow__num">PHASE 01</span><h3>Map generative value</h3><p>What do artisans and their communities enjoy most? What is joyful, beautiful, enriching, meaningful — and who generates it?</p></div>
+        <div class="flow__step"><span class="flow__num">PHASE 02</span><h3>Map extraction</h3><p>Where is value alienated from its creators — income loss, commercialization demands, ecological costs?</p></div>
+        <div class="flow__step"><span class="flow__num">PHASE 03</span><h3>Study the relations</h3><p>How is extraction conceptualized, resisted, and strategically negotiated by the people living it?</p></div>
+        <div class="flow__step"><span class="flow__num">PHASE 04</span><h3>Co-design interventions</h3><p>Sustain the generative, fend off or substitute the extractive, and build systems that circulate unalienated value.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The fieldwork</h2>
+      <div class="case-body">
+        <p>The <strong>Artisanal Futures workshop</strong> ran over two
+        consecutive days — ten hours — in June 2022, in a university facility
+        we converted into a pop-up makerspace stocked with digital design,
+        digital fabrication, and sensor technologies. Twenty Detroit artisan
+        entrepreneurs joined as co-designers: a fashion designer, a sewist, a
+        felt artist, a boutique owner, a visual storyteller, a master
+        gardener, a landscaper, a farmer, two arts-education directors, and
+        the co-founders of a new community gardening project.</p>
+        <p>Each participant was first interviewed (semi-structured, recorded
+        and transcribed, then coded for beliefs, values, and goals).
+        Bringing artisans from different worksites into one shared space was
+        a deliberate move — when participants hear each other exchange work
+        experiences, the workshop becomes what the PD literature calls an
+        "occasion for enfranchisement."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- COHORT -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">Who We Designed With</span>
+      <span class="viz__note">Workshop + year-one research cohort</span>
+    </div>
+    <div class="viz__body">
+      <div class="cohort">
+        <div class="cohort__cell"><span class="cohort__num" data-count="20">20</span><span class="cohort__label">ARTISAN CO-DESIGNERS, JUNE 2022 WORKSHOP</span></div>
+        <div class="cohort__cell"><span class="cohort__num" data-count="16">16</span><span class="cohort__label">RECRUITED TO YEAR-ONE COHORT (+4 ONBOARDING)</span></div>
+        <div class="cohort__cell"><span class="cohort__num">100%</span><span class="cohort__label">AFRICAN AMERICAN PARTICIPANTS</span></div>
+        <div class="cohort__cell"><span class="cohort__num">80%</span><span class="cohort__label">WOMEN-OWNED BUSINESSES IN COHORT</span></div>
+      </div>
+      <div class="craftchips" aria-label="Participant crafts and sectors">
+        <span>URBAN FARMING</span><span>TEXTILES</span><span>ADORNMENT</span><span>EDUCATION</span>
+        <span>COSMETOLOGY</span><span>TOYS</span><span>FURNITURE</span><span>SOLAR ENERGY</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>What artisans taught us</h2>
+      <div class="case-body">
+        <p>The literature describes artisan entrepreneurs through an
+        <strong>oppositional identity</strong> — defined as much by who they
+        are not as who they are. Our participants confirmed all four
+        dimensions, and they became design requirements:</p>
+        <div class="oppgrid">
+          <div class="oppgrid__cell"><span class="yes">Craft</span><span class="no">over <s>mass production</s></span></div>
+          <div class="oppgrid__cell"><span class="yes">Independence</span><span class="no">over <s>conglomeration</s></span></div>
+          <div class="oppgrid__cell"><span class="yes">Community &amp; localism</span><span class="no">over <s>distant corporatism</s></span></div>
+          <div class="oppgrid__cell"><span class="yes">Meaning</span><span class="no">over <s>profit maximization</s></span></div>
+        </div>
+        <p style="margin-top:1.5rem">The threat model came into focus too:
+        industrial appropriation by marketing (the world's three largest
+        snack companies all sell "artisan" branded products) and by the gig
+        economy's algorithmic extraction — platforms that advertise
+        independence while taking most of the earnings. A key fieldwork
+        lesson: empowerment is often <strong>non-digital first</strong>.
+        Before laser cutters, our makers needed felt-pressing machines, heat
+        sealers, and solar photovoltaics for the urban farms' sensors.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- AUTHENTE-KENTE -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">Authente-Kente — AI for Authenticity</span>
+      <span class="viz__note">Interactive concept UI · deep-learning pilot (Robinson et&nbsp;al., 2021)</span>
+    </div>
+    <div class="viz__body">
+      <div class="kente">
+        <div class="swatches">
+          <button class="swatch swatch--a on" data-swatch="a" type="button">
+            <div class="swatch__cloth" aria-hidden="true"></div>
+            <span class="swatch__label"><span>SWATCH A</span><span>TAP TO SCAN</span></span>
+          </button>
+          <button class="swatch swatch--b" data-swatch="b" type="button">
+            <div class="swatch__cloth" aria-hidden="true"></div>
+            <span class="swatch__label"><span>SWATCH B</span><span>TAP TO SCAN</span></span>
+          </button>
+        </div>
+        <div class="scanresult" id="scanresult" aria-live="polite">
+          <div class="scanresult__status good" id="scanstatus">CLASSIFICATION — HANDWOVEN · KENTE</div>
+          <div class="confbar"><div class="confbar__fill" id="scanconf" style="width:97%;background:#9BE564"></div></div>
+          <h3 id="scantitle">Handwoven — 97% confidence</h3>
+          <p id="scandesc">Strip-loom irregularities detected. Provenance matched: weaving collective, Kumasi region. Value-added paths unlocked for the maker.</p>
+          <div class="provenance" id="scanprov">
+            <a href="#" onclick="return false">→ Meet the weaver — video introduction</a>
+            <a href="#" onclick="return false">→ Commission directly from the collective</a>
+            <a href="#" onclick="return false">→ Book a guest lecture for your class</a>
+          </div>
+        </div>
+      </div>
+      <p class="viz__note" style="margin-top:1.2rem;text-align:left">THE REAL PILOT IDENTIFIES HANDWOVEN CLOTH FROM A SINGLE PHOTO, SO BUYERS CAN FIND — AND PAY — THE ACTUAL WEAVERS.</p>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>Heritage algorithms</h2>
+      <div class="case-body">
+        <p>The lab's lineage runs through <strong>Culturally Situated Design
+        Tools</strong> (csdt.org) — Eglash's NSF-funded suite where students
+        discover the "heritage algorithms" inside cultural practices: the
+        transformational geometry of cornrow braiding, the stamped symmetries
+        of tooled leather, the iterative logic of quilting and beadwork.
+        These practices already contain the computation; the tools make it
+        visible.</p>
+        <p>The recreations below are working miniatures of three CSDT tools.
+        Every pattern is generated by rules you can read, adjust, learn, and
+        teach.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CSDT: CORNROW CURVES -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">CSDT 01 — Cornrow Curves</span>
+      <span class="viz__note">Iterative transformation: translate · rotate · dilate</span>
+    </div>
+    <div class="viz__body">
+      <canvas class="csdt" id="cornrow" width="900" height="380" role="img" aria-label="Generated cornrow braid curve made of iterated plaits"></canvas>
+      <div class="ctrls">
+        <div class="ctrl"><label>Plaits <output id="cc-n-o">36</output></label><input type="range" id="cc-n" min="5" max="80" value="36"></div>
+        <div class="ctrl"><label>Rotate / step <output id="cc-r-o">7°</output></label><input type="range" id="cc-r" min="-15" max="15" value="7" step="0.5"></div>
+        <div class="ctrl"><label>Dilate / step <output id="cc-d-o">97%</output></label><input type="range" id="cc-d" min="88" max="101" value="97" step="0.5"></div>
+        <div class="ctrl"><label>Spacing <output id="cc-s-o">60%</output></label><input type="range" id="cc-s" min="30" max="110" value="60"></div>
+        <div class="ctrl ctrl--check"><input type="checkbox" id="cc-m" checked><label for="cc-m">MIRROR</label></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CSDT: TOOLED LEATHER -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">CSDT 02 — Tooled Leather</span>
+      <span class="viz__note">Stamped rotational symmetry — Tuareg · Mexican · Celtic traditions</span>
+    </div>
+    <div class="viz__body">
+      <canvas class="csdt" id="leather" width="900" height="420" role="img" aria-label="Generated tooled leather medallion of stamped shapes in rotational symmetry"></canvas>
+      <div class="ctrls">
+        <div class="ctrl"><label>Stamp</label>
+          <select id="tl-shape">
+            <option value="diamond">DIAMOND</option>
+            <option value="petal" selected>PETAL</option>
+            <option value="crescent">CRESCENT</option>
+            <option value="star">STAR</option>
+          </select>
+        </div>
+        <div class="ctrl"><label>Stamps / ring <output id="tl-n-o">12</output></label><input type="range" id="tl-n" min="4" max="28" value="12"></div>
+        <div class="ctrl"><label>Rings <output id="tl-g-o">3</output></label><input type="range" id="tl-g" min="1" max="4" value="3"></div>
+        <div class="ctrl"><label>Ring twist <output id="tl-t-o">12°</output></label><input type="range" id="tl-t" min="0" max="45" value="12"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CSDT: AI KEEPIN IT REAL -->
+  <div class="viz">
+    <div class="viz__head">
+      <span class="viz__title">CSDT 03 — AI: Keepin' it Real</span>
+      <span class="viz__note">Heritage algorithm vs. statistical imitation</span>
+    </div>
+    <div class="viz__body">
+      <div class="compare">
+        <div class="compare__col">
+          <canvas class="csdt" id="aikr-real" width="440" height="320" role="img" aria-label="Cornrow curve generated by a heritage algorithm with visible rules"></canvas>
+          <div class="compare__card">
+            <span class="k good">HERITAGE ALGORITHM</span>
+            <p>RULES: TRANSLATE 60% · ROTATE 7° · DILATE 97%<br>LEARNABLE · TEACHABLE · OWNED BY ITS COMMUNITY</p>
+          </div>
+        </div>
+        <div class="compare__col">
+          <canvas class="csdt" id="aikr-fake" width="440" height="320" role="img" aria-label="A glitchy AI imitation of the same cornrow pattern with broken structure"></canvas>
+          <div class="compare__card">
+            <span class="k bad">AI IMITATION</span>
+            <p>SOURCE: SCRAPED IMAGES · NO CONSENT · NO CREDIT<br>COPIES THE LOOK; LOSES THE TECHNIQUE AND ITS HISTORY</p>
+          </div>
+        </div>
+      </div>
+      <div class="ctrls" style="justify-content:space-between">
+        <button class="csdtbtn" id="aikr-regen" type="button">Regenerate imitation</button>
+        <span class="viz__note">THE LEFT PATTERN FOLLOWS RULES A STUDENT CAN LEARN. THE RIGHT ONE HAS NO RULES TO TEACH.</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>Designing at three scales</h2>
+      <div class="case-body">
+        <div class="tiers">
+          <div class="tier"><span class="tier__scale">MICRO</span><div><h3>The artisan's own practice</h3><p>Authenticity AI (Authente-Kente), generative synthesis of traditional and contemporary textile patterns, laser cutting, 3D printing, soil sensing — innovation selectively adopted on the artisan's terms, like the Jura watchmakers choosing home production over the factory.</p></div></div>
+          <div class="tier"><span class="tier__scale">MESO</span><div><h3>Links between enterprises</h3><p>Grassroots-owned e-fulfillment instead of subcontracting to platforms; digital financing for pooled purchasing and mutual aid; intelligent agents for artisan-to-artisan supply chains; search engines that steer consumption toward the artisan economy.</p></div></div>
+          <div class="tier"><span class="tier__scale">MACRO</span><div><h3>A generative economy</h3><p>Commons-based peer production, gift economies, timebanks, local currency — circulation structured for local flourishing, including flows back to the ecosystems the work depends on.</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="case-section">
+    <div class="case-section__inner">
+      <h2>The outcome</h2>
+      <div class="case-body">
+        <div class="outcomes">
+          <div class="outcome"><span class="outcome__num">20</span><span class="outcome__label mono">DETROIT ARTISANS AS CO-DESIGNERS</span></div>
+          <div class="outcome"><span class="outcome__num">2023</span><span class="outcome__label mono">ROUTLEDGE CHAPTER — "COUNTER-HEGEMONIC AI"</span></div>
+          <div class="outcome"><span class="outcome__num">4</span><span class="outcome__label mono">PHASE GPD METHOD CONTRIBUTED TO HCI/CSCW</span></div>
+        </div>
+        <p style="margin-top:2rem">The theory side published as
+        "Counter-hegemonic AI: the role of artisanal identity in the design
+        of automation for a liberated economy" (in <em>AI and the Future of
+        Creative Work</em>, Routledge, 2023). The empirical side — workshop
+        themes on artisans' perceptions of success and their relationships
+        with technology — produced design principles now guiding the lab's
+        Artisanal Futures platform development.</p>
+        <p>Twenty artisans spent two days teaching us what they wanted from
+        technology, and almost none of it was a screen. What they kept
+        returning to was ownership — of the platform, and of where the tools
+        got pointed. The interface mattered, but only after that.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="case-next">
+    <span class="k mono">BACK TO START — 01 / 07</span>
+    <a class="case-next__link" href="comed-v2x.html">ComEd — V2X Impact Study →</a>
+  </section>
+</main>
+
+<p class="case-disclaimer mono">CONTENT BASED ON "ARTISANAL FUTURING" (GARVIN ET AL.) AND "COUNTER-HEGEMONIC AI" (ROUTLEDGE, 2023). NSF AWARD IIS-2128756. THE AUTHENTE-KENTE UI IS A CONCEPT RECREATION; CLASSIFICATION VALUES ARE ILLUSTRATIVE.</p>
+
+<footer class="footer">
+  <p class="mono">© 2026 MATTHEW GARVIN · <a href="https://vinsettastudio.com/" target="_blank" rel="noopener">DESIGNED BY VINSETTA STUDIO LLC</a></p>
+  <div class="footer__links mono">
+    <a href="https://www.linkedin.com/in/matthew-garvin-7260724a/" target="_blank" rel="noopener">LINKEDIN</a>
+    <a href="https://github.com/mtthwgrvn" target="_blank" rel="noopener">GITHUB</a>
+    <a href="https://mtthwx.com" target="_blank" rel="noopener">BLOG</a>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="js/main.js"></script>
+<script src="js/scrolly.js"></script>
+<script>
+(function () {
+  /* kente scanner toggle */
+  var results = {
+    a: {
+      status: 'CLASSIFICATION — HANDWOVEN · KENTE', cls: 'good',
+      conf: 97, color: '#9BE564',
+      title: 'Handwoven — 97% confidence',
+      desc: 'Strip-loom irregularities detected. Provenance matched: weaving collective, Kumasi region. Value-added paths unlocked for the maker.',
+      prov: true
+    },
+    b: {
+      status: 'CLASSIFICATION — FACTORY-MADE · PRINT', cls: 'bad',
+      conf: 94, color: '#ff5d5d',
+      title: 'Machine print — 94% confidence',
+      desc: 'Uniform repeat geometry and screen-print registration detected. No maker provenance available — this pattern imitates kente without compensating its tradition.',
+      prov: false
+    }
+  };
+  var status = document.getElementById('scanstatus'),
+      conf = document.getElementById('scanconf'),
+      title = document.getElementById('scantitle'),
+      desc = document.getElementById('scandesc'),
+      prov = document.getElementById('scanprov');
+  document.querySelectorAll('.swatch').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.swatch').forEach(function (b) { b.classList.remove('on'); });
+      btn.classList.add('on');
+      var r = results[btn.getAttribute('data-swatch')];
+      status.textContent = r.status;
+      status.className = 'scanresult__status ' + r.cls;
+      conf.style.width = '0%';
+      requestAnimationFrame(function () {
+        setTimeout(function () { conf.style.width = r.conf + '%'; conf.style.background = r.color; }, 30);
+      });
+      title.textContent = r.title;
+      desc.textContent = r.desc;
+      prov.className = 'provenance' + (r.prov ? '' : ' disabled');
+    });
+  });
+
+  /* reveals */
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduced && typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+    document.querySelectorAll('.viz, .flow__step, .tier, .oppgrid__cell, .cohort__cell, .swatch').forEach(function (el) {
+      gsap.from(el, {
+        opacity: 0, y: 26, duration: 0.7, ease: 'power3.out',
+        scrollTrigger: { trigger: el, start: 'top 92%' }
+      });
+    });
+  }
+})();
+</script>
+<script>
+/* ============ CSDT recreations ============ */
+(function () {
+  function ctx2d(id) {
+    var c = document.getElementById(id);
+    return c ? { c: c, x: c.getContext('2d') } : null;
+  }
+
+  /* ---------- plait primitive (shared) ---------- */
+  function plait(x, px, py, ang, s, fill, stroke) {
+    x.save();
+    x.translate(px, py);
+    x.rotate(ang);
+    x.beginPath();
+    x.ellipse(0, 0, s, s * 0.42, 0, 0, Math.PI * 2);
+    x.fillStyle = fill;
+    x.fill();
+    x.lineWidth = Math.max(1, s * 0.12);
+    x.strokeStyle = stroke;
+    x.stroke();
+    /* braid ridge */
+    x.beginPath();
+    x.moveTo(-s * 0.55, 0);
+    x.lineTo(s * 0.55, 0);
+    x.lineWidth = Math.max(0.6, s * 0.06);
+    x.strokeStyle = 'rgba(20,14,8,0.55)';
+    x.stroke();
+    x.restore();
+  }
+
+  function drawBraid(x, W, H, opts) {
+    var n = opts.n, rot = opts.rot * Math.PI / 180, dil = opts.dil / 100,
+        step = opts.step / 100, mirror = opts.mirror;
+    var jitter = opts.jitter || null;
+    var dirs = mirror ? [1, -1] : [1];
+    dirs.forEach(function (m) {
+      var px = W / 2, py = H * 0.86,
+          ang = -Math.PI / 2 + m * 0.32,
+          s = opts.size || 20;
+      for (var i = 0; i < n; i++) {
+        var a = ang + (m > 0 ? 0 : Math.PI);
+        var sz = s, ox = 0, oy = 0;
+        if (jitter) {
+          if (jitter() < 0.12) { /* dropped plait */ }
+          else {
+            a += (jitter() - 0.5) * 1.4;
+            sz *= 0.7 + jitter() * 0.8;
+            ox = (jitter() - 0.5) * 14;
+            oy = (jitter() - 0.5) * 14;
+            plait(x, px + ox, py + oy, a, sz, 'rgba(202,164,106,0.92)', 'rgba(60,40,18,0.9)');
+          }
+        } else {
+          var t = i / n;
+          var col = 'rgba(' + Math.round(202 - 40 * t) + ',' + Math.round(164 - 20 * t) + ',' + Math.round(106 + 30 * t) + ',0.95)';
+          plait(x, px, py, a, sz, col, 'rgba(60,40,18,0.9)');
+        }
+        px += Math.cos(ang) * s * 2 * step;
+        py += Math.sin(ang) * s * 2 * step;
+        ang += m * (jitter ? rot * (0.4 + jitter() * 2.4) : rot);
+        s *= jitter ? dil * (0.96 + jitter() * 0.1) : dil;
+      }
+    });
+  }
+
+  /* ---------- 01 cornrow curves ---------- */
+  var cc = ctx2d('cornrow');
+  if (cc) {
+    var ids = { n: 'cc-n', r: 'cc-r', d: 'cc-d', s: 'cc-s' };
+    function ccRender() {
+      var W = cc.c.width, H = cc.c.height, x = cc.x;
+      x.clearRect(0, 0, W, H);
+      var n = +document.getElementById('cc-n').value,
+          r = +document.getElementById('cc-r').value,
+          d = +document.getElementById('cc-d').value,
+          s = +document.getElementById('cc-s').value,
+          m = document.getElementById('cc-m').checked;
+      document.getElementById('cc-n-o').textContent = n;
+      document.getElementById('cc-r-o').textContent = r + '°';
+      document.getElementById('cc-d-o').textContent = d + '%';
+      document.getElementById('cc-s-o').textContent = s + '%';
+      drawBraid(x, W, H, { n: n, rot: r, dil: d, step: s, mirror: m, size: 22 });
+    }
+    ['cc-n', 'cc-r', 'cc-d', 'cc-s', 'cc-m'].forEach(function (id) {
+      document.getElementById(id).addEventListener('input', ccRender);
+    });
+    ccRender();
+  }
+
+  /* ---------- 02 tooled leather ---------- */
+  var tl = ctx2d('leather');
+  function stampPath(x, shape, s) {
+    x.beginPath();
+    if (shape === 'diamond') {
+      x.moveTo(0, -s); x.lineTo(s * 0.6, 0); x.lineTo(0, s); x.lineTo(-s * 0.6, 0); x.closePath();
+    } else if (shape === 'petal') {
+      x.moveTo(0, -s);
+      x.quadraticCurveTo(s * 0.85, -s * 0.2, 0, s);
+      x.quadraticCurveTo(-s * 0.85, -s * 0.2, 0, -s);
+    } else if (shape === 'crescent') {
+      x.arc(0, 0, s, Math.PI * 0.15, Math.PI * 0.85, false);
+      x.arc(0, s * 0.35, s * 0.72, Math.PI * 0.85, Math.PI * 0.15, true);
+      x.closePath();
+    } else { /* star */
+      for (var k = 0; k < 8; k++) {
+        var rr = k % 2 ? s * 0.4 : s;
+        var aa = k * Math.PI / 4 - Math.PI / 2;
+        k ? x.lineTo(Math.cos(aa) * rr, Math.sin(aa) * rr) : x.moveTo(Math.cos(aa) * rr, Math.sin(aa) * rr);
+      }
+      x.closePath();
+    }
+  }
+  function emboss(x, shape, s) {
+    x.save(); x.translate(1.4, 1.4);
+    stampPath(x, shape, s);
+    x.strokeStyle = 'rgba(255,225,190,0.38)'; x.lineWidth = 1.6; x.stroke();
+    x.restore();
+    stampPath(x, shape, s);
+    x.strokeStyle = 'rgba(28,14,4,0.92)'; x.lineWidth = 1.8; x.stroke();
+  }
+  if (tl) {
+    function tlRender() {
+      var W = tl.c.width, H = tl.c.height, x = tl.x;
+      /* leather ground */
+      var g = x.createRadialGradient(W / 2, H / 2, 40, W / 2, H / 2, W * 0.6);
+      g.addColorStop(0, '#7a5535'); g.addColorStop(0.7, '#62412a'); g.addColorStop(1, '#46301f');
+      x.fillStyle = g; x.fillRect(0, 0, W, H);
+      var shape = document.getElementById('tl-shape').value,
+          n = +document.getElementById('tl-n').value,
+          rings = +document.getElementById('tl-g').value,
+          twist = +document.getElementById('tl-t').value * Math.PI / 180;
+      document.getElementById('tl-n-o').textContent = n;
+      document.getElementById('tl-g-o').textContent = rings;
+      document.getElementById('tl-t-o').textContent = document.getElementById('tl-t').value + '°';
+      var cxp = W / 2, cyp = H / 2, base = 52, gap = Math.min(54, (Math.min(W, H) / 2 - base - 20) / Math.max(1, rings - 1) || 54);
+      /* center medallion */
+      x.save(); x.translate(cxp, cyp); emboss(x, 'star', 24); x.restore();
+      for (var r = 0; r < rings; r++) {
+        var rad = base + r * gap, size = 15 + r * 2;
+        for (var k = 0; k < n; k++) {
+          var a = k * 2 * Math.PI / n + r * twist;
+          x.save();
+          x.translate(cxp + Math.cos(a) * rad, cyp + Math.sin(a) * rad);
+          x.rotate(a + Math.PI / 2);
+          emboss(x, shape, size);
+          x.restore();
+        }
+      }
+      /* border rows */
+      for (var bx = 26; bx < W - 20; bx += 34) {
+        [22, H - 22].forEach(function (by) {
+          x.save(); x.translate(bx, by); x.rotate(Math.PI / 2); emboss(x, 'diamond', 9); x.restore();
+        });
+      }
+    }
+    ['tl-shape', 'tl-n', 'tl-g', 'tl-t'].forEach(function (id) {
+      document.getElementById(id).addEventListener('input', tlRender);
+    });
+    tlRender();
+  }
+
+  /* ---------- 03 AI: keepin' it real ---------- */
+  var ar = ctx2d('aikr-real'), af = ctx2d('aikr-fake');
+  function seeded(seed) {
+    return function () {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    };
+  }
+  function aikrRender(seed) {
+    if (ar) {
+      ar.x.clearRect(0, 0, ar.c.width, ar.c.height);
+      drawBraid(ar.x, ar.c.width, ar.c.height, { n: 30, rot: 7, dil: 97, step: 60, mirror: true, size: 15 });
+    }
+    if (af) {
+      af.x.clearRect(0, 0, af.c.width, af.c.height);
+      drawBraid(af.x, af.c.width, af.c.height, { n: 30, rot: 7, dil: 97, step: 60, mirror: true, size: 15, jitter: seeded(seed) });
+    }
+  }
+  var seed = 42;
+  aikrRender(seed);
+  var regen = document.getElementById('aikr-regen');
+  if (regen) regen.addEventListener('click', function () { seed = Math.floor(Math.random() * 100000); aikrRender(seed); });
+})();
+</script>
+</body>
+</html>
