@@ -26,8 +26,8 @@
   padding: 1rem 1.4rem;
   border-bottom: 1px solid var(--hairline);
 }
-.viz__title { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
-.viz__note { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); text-align: right; }
+.viz__title { font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+.viz__note { font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); text-align: right; }
 .viz__body { padding: clamp(1.2rem, 3vw, 2.5rem); }
 
 /* ---------- PWT model svg (after Duffy et al., 2016, Fig. 1) ---------- */
@@ -55,21 +55,21 @@
 .stato { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--hairline); border: 1px solid var(--hairline); }
 .stato__cell { background: var(--bg); padding: 1.5rem 1.3rem; }
 .stato__num { display: block; font-size: clamp(1.9rem, 3.6vw, 2.8rem); font-weight: 600; line-height: 1; color: var(--accent); letter-spacing: -0.02em; }
-.stato__label { display: block; margin-top: 0.6rem; font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
+.stato__label { display: block; margin-top: 0.6rem; font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
 @media (max-width: 700px) { .stato { grid-template-columns: 1fr 1fr; } }
 .splitbar { margin-top: 1.4rem; }
 .splitbar__track { display: flex; height: 26px; border-radius: 6px; overflow: hidden; border: 1px solid var(--hairline); }
-.splitbar__seg { display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; color: var(--bg); font-weight: 500; }
+.splitbar__seg { display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; color: var(--bg); font-weight: 500; }
 .splitbar__seg--ca { background: #B58CFF; width: 52.4%; }
 .splitbar__seg--bsc { background: rgba(181,140,255,0.45); width: 47.6%; color: var(--ink); }
-.splitbar__legend { display: flex; justify-content: space-between; margin-top: 0.5rem; font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
+.splitbar__legend { display: flex; justify-content: space-between; margin-top: 0.5rem; font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
 
 /* ---------- two-sided service map ---------- */
 .sides { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (max-width: 820px) { .sides { grid-template-columns: 1fr; } }
 .side { border: 1px solid var(--hairline); border-radius: 6px; background: rgba(8,8,14,0.5); padding: 1.3rem; }
-.side__role { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 0.2rem; }
-.side__who { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); display: block; margin-bottom: 1rem; }
+.side__role { font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.13em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 0.2rem; }
+.side__who { font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); display: block; margin-bottom: 1rem; }
 .side ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .side li { padding: 0.75rem 0; border-top: 1px solid var(--hairline); font-size: 0.88rem; color: var(--ink-dim); line-height: 1.5; }
 .side li b { color: var(--ink); font-weight: 600; display: block; font-size: 0.92rem; margin-bottom: 0.15rem; }
@@ -77,7 +77,7 @@
 /* ---------- moderator explorer ---------- */
 .modtabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.4rem; }
 .modtab {
-  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase;
+  font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.12em; text-transform: uppercase;
   padding: 0.55rem 1rem; border-radius: 999px;
   background: transparent; color: var(--ink-dim);
   border: 1px solid var(--hairline); cursor: pointer;
@@ -89,13 +89,13 @@
 .modpanel { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (max-width: 820px) { .modpanel { grid-template-columns: 1fr; } }
 .modcard { border: 1px solid var(--hairline); border-radius: 6px; background: rgba(8,8,14,0.5); padding: 1.3rem; min-height: 190px; }
-.modcard__k { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-dim); display: block; margin-bottom: 0.7rem; }
+.modcard__k { font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-dim); display: block; margin-bottom: 0.7rem; }
 .modcard__k.alt { color: var(--accent); }
 .modcard p { font-size: 0.9rem; color: var(--ink-dim); margin: 0 0 0.8rem; line-height: 1.6; }
 .modcard p b { color: var(--ink); }
 .modquote { border-left: 3px solid var(--accent); padding: 0.3rem 0 0.3rem 1rem; font-size: 0.86rem; color: var(--ink); font-style: italic; margin-top: 0.4rem; }
-.modquote span { display: block; font-style: normal; font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.1em; color: var(--ink-dim); margin-top: 0.4rem; }
-.modbadge { display: inline-block; font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.14em; color: var(--bg); background: var(--accent); border-radius: 999px; padding: 0.25rem 0.6rem; margin-left: 0.5rem; vertical-align: middle; }
+.modquote span { display: block; font-style: normal; font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; color: var(--ink-dim); margin-top: 0.4rem; }
+.modbadge { display: inline-block; font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.14em; color: var(--bg); background: var(--accent); border-radius: 999px; padding: 0.25rem 0.6rem; margin-left: 0.5rem; vertical-align: middle; }
 </style>
 </head>
 <body data-page="case">

@@ -9,6 +9,7 @@
   --font-display: "Space Grotesk", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
   --pad: clamp(1.25rem, 5vw, 5rem);
+  --fs-micro: 0.75rem;   /* 12px — minimum readable label size; clears Wave "very small text" */
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -26,7 +27,7 @@ body {
 
 a { color: inherit; text-decoration: none; }
 img { max-width: 100%; display: block; }
-.mono { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; }
+.mono { font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.12em; text-transform: uppercase; }
 
 /* keyboard focus — accent ring clears 3:1 against --bg */
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
@@ -37,7 +38,7 @@ img { max-width: 100%; display: block; }
   transform: translateY(-130%);
   background: var(--ink); color: var(--bg);
   padding: 0.8rem 1.3rem;
-  font-family: var(--font-mono); font-size: 0.72rem;
+  font-family: var(--font-mono); font-size: var(--fs-micro);
   letter-spacing: 0.12em; text-transform: uppercase;
   transition: transform 0.2s ease;
 }
@@ -81,10 +82,10 @@ body.cursor-on .cursor { opacity: 1; }
   border-bottom: 1px solid var(--hairline);
 }
 .nav__logo { font-weight: 700; font-size: 1.15rem; letter-spacing: 0.02em; }
-.nav__logo sup { font-size: 0.5em; }
+.nav__logo sup { font-size: 0.65em; } /* ~12px against 1.15rem logo */
 .nav__links { display: flex; gap: 2rem; }
 .nav__links a {
-  font-family: var(--font-mono); font-size: 0.72rem;
+  font-family: var(--font-mono); font-size: var(--fs-micro);
   letter-spacing: 0.14em; text-transform: uppercase;
   position: relative; opacity: 0.85;
 }
@@ -140,7 +141,7 @@ body.cursor-on .cursor { opacity: 1; }
   border-radius: 999px;
   background: var(--ink);
   color: var(--bg);
-  font-family: var(--font-mono); font-size: 0.72rem;
+  font-family: var(--font-mono); font-size: var(--fs-micro);
   letter-spacing: 0.12em; text-transform: uppercase;
   transition: background 0.3s, color 0.3s, transform 0.3s;
 }
@@ -251,7 +252,7 @@ html.anim-ready .split-words.in .w { opacity: 1; }
   border-radius: 999px;
   padding: 0.3rem 0.7rem;
   color: var(--ink-dim);
-  font-size: 0.6rem;
+  font-size: var(--fs-micro);
   white-space: nowrap;
 }
 .work-item__arrow {
@@ -423,7 +424,7 @@ html.anim-ready .split-words.in .w { opacity: 1; }
   position: relative; overflow: hidden;
 }
 .case-band__chip {
-  font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.14em;
+  font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--accent);
   border: 1px solid var(--accent);
@@ -458,7 +459,7 @@ html.anim-ready .split-words.in .w { opacity: 1; }
 .scrolly__steps { display: flex; flex-direction: column; }
 .scrolly__step { padding: 1.4rem 0; }
 .scrolly__step .s-num {
-  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.14em;
+  font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 0.6rem;
 }
 .scrolly__step h3 {

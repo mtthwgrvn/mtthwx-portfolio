@@ -26,8 +26,8 @@
   padding: 1rem 1.4rem;
   border-bottom: 1px solid var(--hairline);
 }
-.viz__title { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
-.viz__note { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); text-align: right; }
+.viz__title { font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+.viz__note { font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); text-align: right; }
 .viz__body { padding: clamp(1.2rem, 3vw, 2.5rem); }
 
 /* ---------- visor simulator ---------- */
@@ -163,7 +163,7 @@
 /* state toggles */
 .vstates { display: flex; gap: 8px; flex-wrap: wrap; }
 .vstate {
-  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase;
+  font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.12em; text-transform: uppercase;
   padding: 0.5rem 0.95rem; border-radius: 999px;
   background: transparent; color: var(--ink-dim);
   border: 1px solid var(--hairline); cursor: pointer;
@@ -197,10 +197,10 @@
   color: var(--accent); font-size: 0.9rem; z-index: 1;
 }
 .flow__step:last-child::after { display: none; }
-.flow__num { font-family: var(--font-mono); font-size: 0.62rem; color: var(--accent); letter-spacing: 0.12em; display: block; margin-bottom: 0.5rem; }
+.flow__num { font-family: var(--font-mono); font-size: var(--fs-micro); color: var(--accent); letter-spacing: 0.12em; display: block; margin-bottom: 0.5rem; }
 .flow__step h3 { font-size: 0.92rem; font-weight: 600; margin: 0 0 0.4rem; color: var(--ink); }
-.flow__step p { font-size: 0.74rem; color: var(--ink-dim); margin: 0; line-height: 1.5; }
-.flow__voice { display: inline-block; margin-top: 0.5rem; font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.06em; color: var(--accent); border: 1px solid rgba(110,139,255,0.4); border-radius: 999px; padding: 0.2rem 0.55rem; }
+.flow__step p { font-size: var(--fs-micro); color: var(--ink-dim); margin: 0; line-height: 1.5; }
+.flow__voice { display: inline-block; margin-top: 0.5rem; font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.06em; color: var(--accent); border: 1px solid rgba(110,139,255,0.4); border-radius: 999px; padding: 0.2rem 0.55rem; }
 @media (max-width: 900px) {
   .flow { grid-template-columns: 1fr; }
   .flow__step::after { content: "↓"; right: auto; left: 50%; top: auto; bottom: -16px; transform: translateX(-50%); }
@@ -217,14 +217,14 @@
 }
 .chat__msg--astro .chat__bubble { background: rgba(110,139,255,0.16); border: 1px solid rgba(110,139,255,0.4); border-bottom-right-radius: 3px; }
 .chat__msg--vega .chat__bubble { background: rgba(236,235,230,0.05); border: 1px solid var(--hairline); border-bottom-left-radius: 3px; }
-.chat__meta { font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
+.chat__meta { font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
 .chat__meta .intent { color: var(--accent); }
-.chat__divider { text-align: center; font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.14em; color: var(--ink-dim); text-transform: uppercase; padding: 0.4rem 0; }
+.chat__divider { text-align: center; font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.14em; color: var(--ink-dim); text-transform: uppercase; padding: 0.4rem 0; }
 
 /* ---------- TLX bars ---------- */
 .tlx { display: flex; flex-direction: column; gap: 14px; max-width: 640px; }
 .tlx__row { display: grid; grid-template-columns: 11rem 1fr; gap: 14px; align-items: center; }
-.tlx__label { font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); text-align: right; }
+.tlx__label { font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); text-align: right; }
 .tlx__track { height: 10px; border-radius: 999px; background: rgba(236,235,230,0.07); overflow: hidden; }
 .tlx__fill { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, rgba(110,139,255,0.5), #6E8BFF); }
 @media (max-width: 560px) { .tlx__row { grid-template-columns: 7.2rem 1fr; } }
@@ -239,13 +239,13 @@
   width: 11px; height: 11px; border-radius: 50%;
   background: var(--bg); border: 2px solid var(--accent);
 }
-.tline__date { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em; color: var(--accent); text-transform: uppercase; display: block; margin-bottom: 0.3rem; }
+.tline__date { font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.12em; color: var(--accent); text-transform: uppercase; display: block; margin-bottom: 0.3rem; }
 .tline__item h3 { font-size: 1rem; font-weight: 600; margin: 0 0 0.3rem; }
 .tline__item p { font-size: 0.88rem; color: var(--ink-dim); margin: 0; max-width: 38rem; }
 
 /* module grid */
 .modgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--hairline); border: 1px solid var(--hairline); margin-top: 0.5rem; }
-.modgrid span { background: var(--bg); padding: 0.85rem 0.9rem; font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
+.modgrid span { background: var(--bg); padding: 0.85rem 0.9rem; font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
 .modgrid span b { color: var(--accent); font-weight: 500; }
 @media (max-width: 700px) { .modgrid { grid-template-columns: 1fr 1fr; } }
 </style>
