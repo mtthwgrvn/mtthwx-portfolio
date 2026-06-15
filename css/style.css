@@ -469,7 +469,7 @@ html.anim-ready .split-words.in .w { opacity: 1; }
 .scrolly__step p { color: var(--ink-dim); max-width: 44rem; }
 
 /* live-only: dim the inactive beats (JS off / reduced motion keeps all lit) */
-.scrolly.is-live .scrolly__step { opacity: 0.34; transition: opacity 0.45s ease; }
+.scrolly.is-live .scrolly__step { opacity: 0.65; transition: opacity 0.45s ease; } /* 0.65 keeps inactive steps de-emphasized but >=4.5:1 (a11y) */
 .scrolly.is-live .scrolly__step.is-active { opacity: 1; }
 
 @media (min-width: 821px) {

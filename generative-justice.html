@@ -36,9 +36,9 @@
 .gjsvg .box { fill: rgba(8,8,14,0.6); stroke: rgba(236,235,230,0.18); }
 .gjsvg .box--bad { stroke: rgba(255,93,93,0.55); }
 .gjsvg .box--good { stroke: rgba(155,229,100,0.6); }
-.gjsvg .lbl { fill: #ecebe6; font-size: 11px; letter-spacing: 0.08em; }
-.gjsvg .sub { fill: #9b9a93; font-size: 8.5px; letter-spacing: 0.06em; }
-.gjsvg .tag { font-size: 9px; letter-spacing: 0.14em; }
+.gjsvg .lbl { fill: #ecebe6; font-size: 12px; letter-spacing: 0.08em; }
+.gjsvg .sub { fill: #9b9a93; font-size: 12px; letter-spacing: 0.06em; }
+.gjsvg .tag { font-size: 12px; letter-spacing: 0.14em; }
 .gjsvg .tag--bad { fill: #ff5d5d; }
 .gjsvg .tag--good { fill: #9BE564; }
 .gjsvg .wire { fill: none; stroke-width: 1.4; stroke-dasharray: 5 5; animation: gjwire 1.4s linear infinite; }
@@ -266,13 +266,13 @@ canvas.csdt { width: 100%; height: auto; display: block; border-radius: 6px; bor
               <text class="sub" text-anchor="middle" x="230" y="84">fees · rank games</text>
               <text class="sub" text-anchor="middle" x="230" y="96">data harvest · "artisan™" branding</text>
               <rect class="box" x="40" y="270" width="110" height="46" rx="6"/>
-              <text class="lbl" text-anchor="middle" x="95" y="291" font-size="9.5">BRAIDER</text>
+              <text class="lbl" text-anchor="middle" x="95" y="291" font-size="12">BRAIDER</text>
               <text class="sub" text-anchor="middle" x="95" y="305">cosmetology</text>
               <rect class="box" x="175" y="270" width="110" height="46" rx="6"/>
-              <text class="lbl" text-anchor="middle" x="230" y="291" font-size="9.5">WEAVER</text>
+              <text class="lbl" text-anchor="middle" x="230" y="291" font-size="12">WEAVER</text>
               <text class="sub" text-anchor="middle" x="230" y="305">textiles</text>
               <rect class="box" x="310" y="270" width="110" height="46" rx="6"/>
-              <text class="lbl" text-anchor="middle" x="365" y="291" font-size="9.5">GROWER</text>
+              <text class="lbl" text-anchor="middle" x="365" y="291" font-size="12">GROWER</text>
               <text class="sub" text-anchor="middle" x="365" y="305">urban farm</text>
               <path class="wire wire--up" d="M95 270 C 95 180, 170 140, 200 100"/>
               <path class="wire wire--up" d="M230 270 C 230 200, 230 160, 230 100"/>
@@ -286,16 +286,16 @@ canvas.csdt { width: 100%; height: auto; display: block; border-radius: 6px; bor
             <g class="econ econ--circulate">
               <text class="tag tag--good" x="520" y="32">GENERATIVE JUSTICE — UNALIENATED VALUE, CIRCULATED FROM BELOW</text>
               <rect class="box box--good" x="640" y="60" width="150" height="44" rx="6"/>
-              <text class="lbl" text-anchor="middle" x="715" y="80" font-size="10">MAKER</text>
+              <text class="lbl" text-anchor="middle" x="715" y="80" font-size="12">MAKER</text>
               <text class="sub" text-anchor="middle" x="715" y="94">craft · skill · story</text>
               <rect class="box box--good" x="760" y="170" width="150" height="44" rx="6"/>
-              <text class="lbl" text-anchor="middle" x="835" y="190" font-size="10">BUYERS</text>
+              <text class="lbl" text-anchor="middle" x="835" y="190" font-size="12">BUYERS</text>
               <text class="sub" text-anchor="middle" x="835" y="204">provenance · fair price</text>
               <rect class="box box--good" x="640" y="282" width="150" height="44" rx="6"/>
-              <text class="lbl" text-anchor="middle" x="715" y="302" font-size="10">COMMUNITY</text>
+              <text class="lbl" text-anchor="middle" x="715" y="302" font-size="12">COMMUNITY</text>
               <text class="sub" text-anchor="middle" x="715" y="316">skills taught forward</text>
               <rect class="box box--good" x="520" y="170" width="150" height="44" rx="6"/>
-              <text class="lbl" text-anchor="middle" x="595" y="190" font-size="10">ECOSYSTEM</text>
+              <text class="lbl" text-anchor="middle" x="595" y="190" font-size="12">ECOSYSTEM</text>
               <text class="sub" text-anchor="middle" x="595" y="204">materials · commons</text>
               <path class="wire wire--loop" d="M790 104 C 820 125, 835 145, 835 170"/>
               <path class="wire wire--loop" d="M835 214 C 835 245, 815 265, 790 282"/>
@@ -505,10 +505,10 @@ canvas.csdt { width: 100%; height: auto; display: block; border-radius: 6px; bor
     <div class="viz__body">
       <canvas class="csdt" id="cornrow" width="900" height="380" role="img" aria-label="Generated cornrow braid curve made of iterated plaits"></canvas>
       <div class="ctrls">
-        <div class="ctrl"><label>Plaits <output id="cc-n-o">36</output></label><input type="range" id="cc-n" min="5" max="80" value="36"></div>
-        <div class="ctrl"><label>Rotate / step <output id="cc-r-o">7°</output></label><input type="range" id="cc-r" min="-15" max="15" value="7" step="0.5"></div>
-        <div class="ctrl"><label>Dilate / step <output id="cc-d-o">97%</output></label><input type="range" id="cc-d" min="88" max="101" value="97" step="0.5"></div>
-        <div class="ctrl"><label>Spacing <output id="cc-s-o">60%</output></label><input type="range" id="cc-s" min="30" max="110" value="60"></div>
+        <div class="ctrl"><label for="cc-n">Plaits <output id="cc-n-o">36</output></label><input type="range" id="cc-n" min="5" max="80" value="36"></div>
+        <div class="ctrl"><label for="cc-r">Rotate / step <output id="cc-r-o">7°</output></label><input type="range" id="cc-r" min="-15" max="15" value="7" step="0.5"></div>
+        <div class="ctrl"><label for="cc-d">Dilate / step <output id="cc-d-o">97%</output></label><input type="range" id="cc-d" min="88" max="101" value="97" step="0.5"></div>
+        <div class="ctrl"><label for="cc-s">Spacing <output id="cc-s-o">60%</output></label><input type="range" id="cc-s" min="30" max="110" value="60"></div>
         <div class="ctrl ctrl--check"><input type="checkbox" id="cc-m" checked><label for="cc-m">MIRROR</label></div>
       </div>
     </div>
@@ -523,7 +523,7 @@ canvas.csdt { width: 100%; height: auto; display: block; border-radius: 6px; bor
     <div class="viz__body">
       <canvas class="csdt" id="leather" width="900" height="420" role="img" aria-label="Generated tooled leather medallion of stamped shapes in rotational symmetry"></canvas>
       <div class="ctrls">
-        <div class="ctrl"><label>Stamp</label>
+        <div class="ctrl"><label for="tl-shape">Stamp</label>
           <select id="tl-shape">
             <option value="diamond">DIAMOND</option>
             <option value="petal" selected>PETAL</option>
@@ -531,9 +531,9 @@ canvas.csdt { width: 100%; height: auto; display: block; border-radius: 6px; bor
             <option value="star">STAR</option>
           </select>
         </div>
-        <div class="ctrl"><label>Stamps / ring <output id="tl-n-o">12</output></label><input type="range" id="tl-n" min="4" max="28" value="12"></div>
-        <div class="ctrl"><label>Rings <output id="tl-g-o">3</output></label><input type="range" id="tl-g" min="1" max="4" value="3"></div>
-        <div class="ctrl"><label>Ring twist <output id="tl-t-o">12°</output></label><input type="range" id="tl-t" min="0" max="45" value="12"></div>
+        <div class="ctrl"><label for="tl-n">Stamps / ring <output id="tl-n-o">12</output></label><input type="range" id="tl-n" min="4" max="28" value="12"></div>
+        <div class="ctrl"><label for="tl-g">Rings <output id="tl-g-o">3</output></label><input type="range" id="tl-g" min="1" max="4" value="3"></div>
+        <div class="ctrl"><label for="tl-t">Ring twist <output id="tl-t-o">12°</output></label><input type="range" id="tl-t" min="0" max="45" value="12"></div>
       </div>
     </div>
   </div>

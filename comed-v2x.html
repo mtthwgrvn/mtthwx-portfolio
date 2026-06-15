@@ -61,7 +61,7 @@
 
 /* ---------- grid trajectory chart ---------- */
 .traj { width: 100%; height: auto; display: block; }
-.traj text { font-family: "IBM Plex Mono", monospace; font-size: 9px; fill: #9b9a93; letter-spacing: 0.06em; }
+.traj text { font-family: "IBM Plex Mono", monospace; font-size: 12px; fill: #9b9a93; letter-spacing: 0.06em; }
 .traj .axis { stroke: rgba(236,235,230,0.25); stroke-width: 1; }
 .traj .gline { fill: none; stroke-width: 2; }
 .traj .gline--peak { stroke: #00D98B; }
@@ -89,7 +89,7 @@
 .atwrap { display: grid; grid-template-columns: 1.5fr 1fr; gap: clamp(1.2rem, 3vw, 2.2rem); align-items: start; }
 @media (max-width: 880px) { .atwrap { grid-template-columns: 1fr; } }
 .atmap { width: 100%; height: auto; display: block; border: 1px solid var(--hairline); border-radius: 8px; background: #07090c; }
-.atmap text { font-family: "IBM Plex Mono", monospace; font-size: 10px; fill: rgba(236,235,230,0.35); letter-spacing: 0.08em; }
+.atmap text { font-family: "IBM Plex Mono", monospace; font-size: 12px; fill: var(--ink-dim); letter-spacing: 0.08em; } /* was rgba(...,0.35)=2.8:1; ink-dim clears AA */
 .atmap .shore { fill: none; stroke: rgba(93,160,255,0.35); stroke-width: 1.5; stroke-dasharray: 5 5; }
 .atmap .zipdot { stroke: rgba(0,217,139,0.35); stroke-width: 0.5; cursor: pointer; }
 .atmap .zipdot.hbring { stroke: #FFC65D; stroke-width: 1.4; }

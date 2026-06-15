@@ -40,7 +40,7 @@
 .mtl__bar { display: flex; height: 30px; border-radius: 6px; overflow: hidden; border: 1px solid var(--hairline); }
 .mtl__seg { display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; color: var(--ink); }
 .mtl__seg--orbit1 { background: rgba(255,93,93,0.12); width: 33.3%; }
-.mtl__seg--surface { background: rgba(255,93,93,0.42); width: 33.3%; color: var(--bg); font-weight: 500; }
+.mtl__seg--surface { background: var(--accent); width: 33.3%; color: var(--bg); font-weight: 500; } /* full accent so black label clears contrast */
 .mtl__seg--orbit2 { background: rgba(255,93,93,0.12); width: 33.3%; }
 .mtl__legend { display: flex; justify-content: space-between; margin-top: 0.5rem; font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
 
@@ -70,9 +70,9 @@
 .mbse text { font-family: "IBM Plex Mono", monospace; }
 .mbse .box { fill: rgba(8,8,14,0.6); stroke: rgba(236,235,230,0.18); }
 .mbse .box--accent { stroke: rgba(255,93,93,0.6); }
-.mbse .lbl { fill: #ecebe6; font-size: 10.5px; letter-spacing: 0.08em; }
-.mbse .sub { fill: #9b9a93; font-size: 8.5px; letter-spacing: 0.05em; }
-.mbse .tag { fill: #FF5D5D; font-size: 8.5px; letter-spacing: 0.14em; }
+.mbse .lbl { fill: #ecebe6; font-size: 12px; letter-spacing: 0.08em; }
+.mbse .sub { fill: #9b9a93; font-size: 12px; letter-spacing: 0.05em; }
+.mbse .tag { fill: #FF5D5D; font-size: 12px; letter-spacing: 0.14em; }
 .mbse .wire { fill: none; stroke: rgba(255,93,93,0.55); stroke-width: 1.3; stroke-dasharray: 5 5; animation: mbsewire 1.4s linear infinite; }
 @keyframes mbsewire { to { stroke-dashoffset: -10; } }
 @media (prefers-reduced-motion: reduce) { .mbse .wire { animation: none; } }
