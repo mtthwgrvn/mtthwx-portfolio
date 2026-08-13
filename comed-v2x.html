@@ -11,7 +11,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <style>
-:root { --accent: #00D98B; }
+:root {
+  --accent: #00D98B;
+  /* Map surfaces. These can only be pushed about 1.2:1 apart: the data ramp's floor
+     step has to keep 3:1 against the land it sits on, which caps how bright the land
+     may be. So the fills alone are NOT what separates land from water — the coast
+     stroke and the border weights are. Measured: territory/context 1.19:1,
+     territory/lake 1.21:1, ramp floor on territory 3.09:1. */
+  /* The lake carries no marks, so it is free to be properly blue — it is the only
+     one of the three surfaces the ramp's contrast floor does not constrain, and
+     hue is what makes it read as water at these luminances. */
+  --map-lake: #0A1E33;
+  --map-land: #090B0F;   /* land outside ComEd territory */
+  --map-terr: #1A1F28;   /* the 25 ComEd counties */
+  --map-coast: #2E6FA8;
+  --quiet: #6b6a64;      /* de-emphasis series */
+}
 
 /* ---------- shared viz panel ---------- */
 .viz {
@@ -19,10 +34,10 @@
   border: 1px solid var(--hairline);
   border-radius: 6px;
   background: var(--bg-2);
-  overflow: hidden;
+  /* not overflow:hidden — it clipped the focus ring on edge-adjacent controls */
 }
 .viz__head {
-  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
   padding: 1rem 1.4rem;
   border-bottom: 1px solid var(--hairline);
 }
@@ -31,46 +46,77 @@
 .viz__body { padding: clamp(1.2rem, 3vw, 2.5rem); }
 
 /* ---------- study stats ---------- */
-.sgrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--hairline); border: 1px solid var(--hairline); }
+.sgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--hairline); border: 1px solid var(--hairline); }
 .sgrid__cell { background: var(--bg); padding: 1.4rem 1.2rem; }
-.sgrid__num { display: block; font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 600; line-height: 1; color: var(--accent); letter-spacing: -0.02em; }
-.sgrid__label { display: block; margin-top: 0.55rem; font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
+.sgrid__num { display: block; font-size: clamp(1.7rem, 3vw, 2.5rem); font-weight: 600; line-height: 1; color: var(--accent); letter-spacing: -0.02em; }
+.sgrid__label { display: block; margin-top: 0.55rem; font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); }
+.sgrid__label small { display: block; margin-top: 0.3rem; letter-spacing: 0.08em; text-transform: none; color: var(--ink-dim); }
 @media (max-width: 820px) { .sgrid { grid-template-columns: 1fr 1fr; } }
 
-/* ---------- tabs ---------- */
+/* facts that are not magnitudes do not get a number slot */
+.sspec { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--hairline); border: 1px solid var(--hairline); border-top: 0; margin: 0; }
+.sspec > div { background: var(--bg); padding: 1rem 1.2rem; }
+.sspec dt { font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
+.sspec dd { margin: 0.35rem 0 0; font-size: 0.92rem; color: var(--ink); }
+@media (max-width: 700px) { .sspec { grid-template-columns: 1fr; } }
+
+/* ---------- controls ---------- */
 .vtab {
   font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.12em; text-transform: uppercase;
   padding: 0.55rem 1rem; border-radius: 999px;
   background: transparent; color: var(--ink-dim);
-  border: 1px solid var(--hairline); cursor: pointer; transition: all 0.25s;
+  border: 1px solid var(--hairline); cursor: pointer; transition: color 0.25s, border-color 0.25s;
 }
 .vtab:hover { color: var(--ink); }
 .vtab.on { border-color: var(--accent); color: var(--accent); }
-.tabrow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
+.tabrow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+/* a <label> is itself a target — clicking it focuses the control — so it has to
+   clear the 24px minimum, which a bare 12px line does not */
+.tabrow__label { display: inline-flex; align-items: center; min-height: 24px; font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); margin-right: 0.2rem; }
 
-/* ---------- emissions explorer ---------- */
-.exbars { display: flex; flex-direction: column; gap: 14px; max-width: 680px; margin-top: 0.6rem; }
-.exbar { display: grid; grid-template-columns: 4rem 1fr 7rem; gap: 14px; align-items: center; }
-.exbar__year { font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; color: var(--ink-dim); text-align: right; }
-.exbar__track { height: 14px; border-radius: 999px; background: rgba(236,235,230,0.07); overflow: hidden; }
-.exbar__fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, rgba(0,217,139,0.45), #00D98B); transition: width 0.6s cubic-bezier(0.65,0,0.35,1), background 0.3s; }
-.exbar__fill.neg { background: linear-gradient(90deg, rgba(255,93,93,0.5), #ff5d5d); }
-.exbar__val { font-family: var(--font-mono); font-size: var(--fs-micro); color: var(--accent); }
-.exbar__val.neg { color: #ff5d5d; }
+/* ---------- chart chrome, shared by both line charts ---------- */
+.chart { width: 100%; height: auto; display: block; overflow: visible; }
+.chart text { font-family: "IBM Plex Mono", monospace; }
+.chart .ctick { font-size: 12px; fill: var(--ink-dim); letter-spacing: 0.04em; }
+.chart .axis-title { font-size: 12px; fill: var(--ink-dim); letter-spacing: 0.1em; text-transform: uppercase; }
+.chart .grid { stroke: rgba(236,235,230,0.10); stroke-width: 1; }      /* solid, never dashed */
+.chart .zero { stroke: rgba(236,235,230,0.38); stroke-width: 1.5; }
+.chart .dot { stroke-width: 2; }
+.chart .hit { fill: transparent; cursor: crosshair; }
+/* keyboard cursor — each figure is one tab stop and the arrow keys move this */
+.chart:focus-visible, .atmap:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.kcurline { stroke: var(--ink); stroke-width: 1; opacity: 0.55; }
+.kcurdot { fill: none; stroke: var(--ink); stroke-width: 2; }
+.atcursor { fill: none; stroke: var(--ink); stroke-width: 2; }
+.cread {
+  margin-top: 0.7rem; min-height: 1.6em;
+  font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.05em; color: var(--ink);
+}
+.chart .xover { stroke: rgba(236,235,230,0.30); stroke-width: 1; }
+.chart .xlab { font-size: 12px; fill: var(--ink-dim); letter-spacing: 0.1em; }
+.chart .lead { stroke: rgba(236,235,230,0.35); stroke-width: 1; }
+
+/* emissions: two emphasised series, three in the de-emphasis grey */
+.chart .ln { fill: none; stroke-linejoin: round; stroke-linecap: round; }
+.chart .ln--a { stroke: var(--accent); stroke-width: 2; }
+.chart .ln--b { stroke: var(--ink); stroke-width: 2; stroke-dasharray: 7 4; }
+.chart .ln--q { stroke: var(--quiet); stroke-width: 1.5; }
+.chart .dot--a { fill: var(--bg-2); stroke: var(--accent); }
+.chart .dot--b { fill: var(--bg-2); stroke: var(--ink); }
+.chart .endlab { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; fill: var(--ink-dim); }
+
+/* trajectory */
+.chart .tl { fill: none; stroke-width: 2; stroke-linejoin: round; }
+.chart .tl--peak { stroke: var(--accent); }
+.chart .tl--off { stroke: var(--ink-dim); stroke-dasharray: 7 4; }
+.chart .dot--peak { fill: var(--bg-2); stroke: var(--accent); }
+.chart .dot--off { fill: var(--bg-2); stroke: var(--ink-dim); }
+.chart .invband { fill: rgba(255,198,93,0.16); stroke: none; }
+
+.clegend { display: flex; gap: 1.4rem; margin-top: 0.9rem; font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); flex-wrap: wrap; }
+.clegend .sw { display: inline-block; width: 22px; height: 0; border-top-width: 2px; border-top-style: solid; vertical-align: middle; margin-right: 7px; }
 .exnote { font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); margin-top: 1.2rem; display: block; min-height: 2.4em; }
-
-/* ---------- grid trajectory chart ---------- */
-.traj { width: 100%; height: auto; display: block; }
-.traj text { font-family: "IBM Plex Mono", monospace; font-size: 12px; fill: #9b9a93; letter-spacing: 0.06em; }
-.traj .axis { stroke: rgba(236,235,230,0.25); stroke-width: 1; }
-.traj .gline { fill: none; stroke-width: 2; }
-.traj .gline--peak { stroke: #00D98B; }
-.traj .gline--off { stroke: rgba(236,235,230,0.6); stroke-dasharray: 6 4; }
-.traj .dot { fill: var(--bg); stroke-width: 2; }
-.traj .dot--peak { stroke: #00D98B; }
-.traj .dot--off { stroke: rgba(236,235,230,0.6); }
-.trajlegend { display: flex; gap: 1.4rem; margin-top: 0.8rem; font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); flex-wrap: wrap; }
-.trajlegend .sw { display: inline-block; width: 22px; height: 2px; vertical-align: middle; margin-right: 6px; }
+.srcnote { font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.08em; color: var(--ink-dim); margin-top: 1rem; display: block; line-height: 1.7; }
 
 /* ---------- method flow ---------- */
 .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
@@ -86,21 +132,44 @@
 }
 
 /* ---------- peaker displacement atlas ---------- */
-.atwrap { display: grid; grid-template-columns: 1.5fr 1fr; gap: clamp(1.2rem, 3vw, 2.2rem); align-items: start; }
-@media (max-width: 880px) { .atwrap { grid-template-columns: 1fr; } }
-.atmap { width: 100%; height: auto; display: block; border: 1px solid var(--hairline); border-radius: 8px; background: #07090c; }
-.atmap text { font-family: "IBM Plex Mono", monospace; font-size: 12px; fill: var(--ink-dim); letter-spacing: 0.08em; } /* was rgba(...,0.35)=2.8:1; ink-dim clears AA */
-.atmap .shore { fill: none; stroke: rgba(93,160,255,0.35); stroke-width: 1.5; stroke-dasharray: 5 5; }
-.atmap .zipdot { stroke: rgba(0,217,139,0.35); stroke-width: 0.5; cursor: pointer; }
-.atmap .zipdot.hbring { stroke: #FFC65D; stroke-width: 1.4; }
-.atmap .pkmark { fill: #ff5d5d; opacity: 0.9; }
+.atwrap { display: grid; grid-template-columns: 1.6fr 1fr; gap: clamp(1.2rem, 3vw, 2.2rem); align-items: start; }
+@media (max-width: 980px) { .atwrap { grid-template-columns: 1fr; } }
+.atmap, .atinset { width: 100%; height: auto; display: block; border: 1px solid var(--hairline); border-radius: 8px; background: var(--map-lake); }
+.atsub { display: grid; grid-template-columns: minmax(220px, 1fr) 1.1fr; gap: 1.2rem; align-items: start; margin-top: 1rem; }
+@media (max-width: 700px) { .atsub { grid-template-columns: 1fr; } }
+.atcap { font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); margin: 0.5rem 0 0; }
+
+.atmap text, .atinset text { font-family: "IBM Plex Mono", monospace; }
+.lake { fill: var(--map-lake); }
+/* stroked wide underneath every land polygon; the fills cover the interior seams
+   and only the true water's edge keeps its blue */
+.coast path { fill: none; stroke: var(--map-coast); stroke-width: 3; stroke-linejoin: round; opacity: 0.85; }
+.land { stroke-linejoin: round; }
+.land--ctx { fill: var(--map-land); stroke: rgba(236,235,230,0.09); stroke-width: 0.7; }
+.land--terr { fill: var(--map-terr); stroke: rgba(236,235,230,0.32); stroke-width: 1.1; }
+.clab { font-size: 11px; fill: rgba(236,235,230,0.40); letter-spacing: 0.16em; pointer-events: none; }
+.city { font-size: 12px; fill: var(--ink); letter-spacing: 0.1em; paint-order: stroke; stroke: var(--map-terr); stroke-width: 3.5px; stroke-linejoin: round; pointer-events: none; }
+.cityd { fill: var(--ink); pointer-events: none; }
+.locator { fill: none; stroke: rgba(236,235,230,0.45); stroke-width: 1.2; stroke-dasharray: 4 3; pointer-events: none; }
+
+.zip { stroke: var(--map-terr); stroke-width: 1; cursor: pointer; }
+/* one hollow mark per county for the zip codes whose position is unknown — drawn
+   so it can never be mistaken for a located data point */
+.zip--est { fill: none; stroke: rgba(236,235,230,0.5); stroke-width: 1.1; stroke-dasharray: 3 2.5; cursor: pointer; }
+.zip:focus-visible, .zip--est:focus-visible { outline: none; stroke: var(--ink); stroke-width: 2.5; stroke-dasharray: none; }
+.hbring { fill: none; stroke: #FFC65D; stroke-width: 1.4; pointer-events: none; }
+.pk { fill: #ff5d5d; stroke: var(--map-terr); stroke-width: 1.2; cursor: pointer; }
+.pk--zero { fill: none; stroke: #ff5d5d; stroke-width: 1.6; }
+.pk:focus-visible { outline: none; stroke: var(--ink); stroke-width: 2.5; }
+
 .atctl { display: flex; gap: 1rem 1.6rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.1rem; }
 .atslider { display: flex; align-items: center; gap: 0.8rem; flex: 1; min-width: 220px; }
-.atslider input[type="range"] { accent-color: var(--accent); flex: 1; }
+/* a range input renders ~16px tall by default, under the 24px minimum target */
+.atslider input[type="range"] { accent-color: var(--accent); flex: 1; height: 24px; }
 .atslider output { font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent); min-width: 3.2em; }
 .atstats { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--hairline); border: 1px solid var(--hairline); margin-bottom: 1rem; }
 .atstats div { background: var(--bg); padding: 0.9rem 1rem; }
-.atstats .n { display: block; font-size: 1.3rem; font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+.atstats .n { display: block; font-size: 1.3rem; font-weight: 600; color: var(--accent); }
 .atstats .l { display: block; margin-top: 0.3rem; font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
 .atlist { list-style: none; margin: 0; padding: 0; counter-reset: atl; }
 .atlist li { display: grid; grid-template-columns: 1.4rem 1fr 70px; gap: 8px; align-items: center; padding: 0.45rem 0; border-top: 1px solid var(--hairline); font-size: 0.8rem; counter-increment: atl; }
@@ -108,9 +177,67 @@
 .atlist .who { color: var(--ink); }
 .atlist .who small { display: block; font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.08em; color: var(--ink-dim); text-transform: uppercase; }
 .atlist .bar { height: 7px; border-radius: 999px; background: rgba(236,235,230,0.07); overflow: hidden; }
-.atlist .bar i { display: block; height: 100%; background: linear-gradient(90deg, rgba(0,217,139,0.45), #00D98B); border-radius: 999px; }
+.atlist .bar i { display: block; height: 100%; border-radius: 999px; }
 .athyp { border: 1px solid rgba(0,217,139,0.45); border-radius: 6px; padding: 0.9rem 1rem; font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-top: 1rem; line-height: 1.7; }
-.atlegend { display: flex; gap: 1.2rem; flex-wrap: wrap; margin-top: 0.9rem; font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
+
+/* legends */
+.atkeys { display: grid; gap: 1rem; }
+.key { border: 1px solid var(--hairline); border-radius: 6px; padding: 0.8rem 0.9rem; }
+.key h3 { margin: 0 0 0.6rem; font-family: var(--font-mono); font-size: var(--fs-micro); font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); }
+.key p { margin: 0.5rem 0 0; font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.06em; color: var(--ink-dim); line-height: 1.6; }
+.lgsvg { width: 100%; max-width: 210px; height: auto; display: block; }
+.lgdot { fill: none; stroke: var(--ink-dim); stroke-width: 1; }
+.lgtx { font-family: "IBM Plex Mono", monospace; font-size: 11px; fill: var(--ink-dim); }
+.lgramp { display: flex; align-items: center; gap: 3px; }
+.lgramp i { display: block; height: 14px; flex: 1; border-radius: 2px; }
+.lgends { display: flex; justify-content: space-between; width: 100%; margin-top: 0.35rem; font-family: var(--font-mono); font-size: var(--fs-micro); color: var(--ink-dim); }
+#lg-ramp { display: flex; flex-wrap: wrap; }
+.keyrow { display: flex; align-items: center; gap: 0.6rem; font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.06em; color: var(--ink-dim); line-height: 1.5; }
+.keyrow + .keyrow { margin-top: 0.5rem; }
+.keyrow svg { flex: none; }
+
+/* readout — the same text the tooltip shows, in the accessibility tree */
+.atreadout {
+  margin-top: 1rem; padding: 0.75rem 1rem; min-height: 3.2em;
+  border: 1px solid var(--hairline); border-radius: 6px;
+  font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.05em;
+  color: var(--ink-dim); line-height: 1.7;
+}
+
+/* ---------- tooltip ---------- */
+.vtip {
+  position: fixed; top: 0; left: 0; z-index: 8000;
+  max-width: 20rem; padding: 0.7rem 0.85rem;
+  background: #04040a; border: 1px solid rgba(236,235,230,0.28); border-radius: 6px;
+  font-family: var(--font-mono); font-size: var(--fs-micro); color: var(--ink);
+  pointer-events: none; opacity: 0; transition: opacity 0.12s;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.55);
+}
+.vtip.on { opacity: 1; }
+.vtip b { display: block; font-weight: 500; letter-spacing: 0.04em; }
+.vtip small { display: block; margin-top: 0.15rem; color: var(--ink-dim); letter-spacing: 0.1em; text-transform: uppercase; }
+.vtip dl { display: grid; grid-template-columns: auto auto; gap: 0.15rem 0.9rem; margin: 0.55rem 0 0; }
+.vtip dt { color: var(--ink-dim); }
+.vtip dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---------- table views ---------- */
+.tview { margin-top: 1.4rem; border-top: 1px solid var(--hairline); padding-top: 0.9rem; }
+.tview + .tview { margin-top: 0.6rem; }
+.tview > summary {
+  cursor: pointer; list-style: none;
+  font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim);
+}
+.tview > summary::-webkit-details-marker { display: none; }
+.tview > summary::before { content: "+ "; color: var(--accent); }
+.tview[open] > summary::before { content: "– "; }
+.tview > summary:hover { color: var(--ink); }
+.tscroll { max-height: 26rem; overflow: auto; margin-top: 0.8rem; border: 1px solid var(--hairline); border-radius: 4px; }
+.dtable { width: 100%; border-collapse: collapse; font-size: var(--fs-micro); font-family: var(--font-mono); }
+.dtable th, .dtable td { padding: 0.45rem 0.7rem; text-align: left; border-bottom: 1px solid var(--hairline); white-space: nowrap; }
+.dtable thead th { position: sticky; top: 0; background: var(--bg); color: var(--ink); letter-spacing: 0.08em; text-transform: uppercase; z-index: 1; }
+.dtable tbody th { font-weight: 400; color: var(--ink); }
+.dtable td { color: var(--ink-dim); }
+.dtable .n { text-align: right; font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body data-page="case">
@@ -181,13 +308,16 @@
     </div>
     <div class="viz__body">
       <div class="sgrid">
-        <div class="sgrid__cell"><span class="sgrid__num">5</span><span class="sgrid__label">SYSTEMS MODELED — V2G · V2H · V2B · BESS · MANAGED CHARGING</span></div>
-        <div class="sgrid__cell"><span class="sgrid__num">3</span><span class="sgrid__label">GRID FUTURES — BASE · OPTIMISTIC · PESSIMISTIC</span></div>
-        <div class="sgrid__cell"><span class="sgrid__num">15yr</span><span class="sgrid__label">HORIZON — 2025 TO 2040, HOURLY EMISSION FACTORS</span></div>
-        <div class="sgrid__cell"><span class="sgrid__num">ISO</span><span class="sgrid__label">14040 / 14044 COMPLIANT pLCA</span></div>
-        <div class="sgrid__cell"><span class="sgrid__num">1kWh</span><span class="sgrid__label">FUNCTIONAL UNIT — NET ENERGY DISCHARGED (PER SYSTEM)</span></div>
+        <div class="sgrid__cell"><span class="sgrid__num">5</span><span class="sgrid__label">Systems modeled<small>V2G · V2H · V2B · stationary BESS · managed charging</small></span></div>
+        <div class="sgrid__cell"><span class="sgrid__num">3</span><span class="sgrid__label">Grid futures<small>Base · optimistic · pessimistic</small></span></div>
+        <div class="sgrid__cell"><span class="sgrid__num">15</span><span class="sgrid__label">Year horizon<small>2025 to 2040, hourly emission factors</small></span></div>
+        <div class="sgrid__cell"><span class="sgrid__num">21</span><span class="sgrid__label">Peaker plants mapped<small>Across 25 counties of ComEd territory</small></span></div>
       </div>
-      <p class="exnote" style="margin-top:1.1rem">DATA: NREL CAMBIUM 2024 HOURLY SCENARIOS · EPA eGRID 2023 · ARGONNE GREET · EPA EJSCREEN · DOE LEAD · ILLINOIS EIEC · COMED EQUITY REPORTS</p>
+      <dl class="sspec">
+        <div><dt>Standard</dt><dd>ISO 14040 / 14044 prospective life cycle assessment</dd></div>
+        <div><dt>Functional unit</dt><dd>1 kWh of net energy discharged, defined per system</dd></div>
+      </dl>
+      <span class="srcnote">SOURCES: NREL CAMBIUM 2024 HOURLY SCENARIOS · EPA eGRID 2023 · ARGONNE GREET · EPA EJSCREEN · DOE LEAD · ILLINOIS EIEC · COMED EQUITY REPORTS</span>
     </div>
   </div>
 
@@ -246,27 +376,29 @@
     </div>
   </section>
 
-  <!-- EMISSIONS EXPLORER -->
+  <!-- EMISSIONS COMPARISON -->
   <div class="viz">
     <div class="viz__head">
-      <span class="viz__title">Emissions Avoided per kWh — Midpoint Results</span>
+      <span class="viz__title">Emissions Avoided per kWh — All Five Systems</span>
       <span class="viz__note">kg CO₂e per functional unit · midpoint memo values</span>
     </div>
     <div class="viz__body">
-      <div class="tabrow" role="tablist" aria-label="System">
-        <button class="vtab on" data-sys="v2g" type="button">V2G</button>
-        <button class="vtab" data-sys="v2h" type="button">V2H</button>
-        <button class="vtab" data-sys="v2b" type="button">V2B</button>
-        <button class="vtab" data-sys="bess" type="button">Stationary BESS</button>
-        <button class="vtab" data-sys="mc" type="button">Managed charging</button>
+      <div class="tabrow" role="group" aria-label="Grid scenario">
+        <span class="tabrow__label">Grid scenario</span>
+        <button class="vtab on" data-scen="0" type="button" aria-pressed="true">Base</button>
+        <button class="vtab" data-scen="1" type="button" aria-pressed="false">Optimistic</button>
+        <button class="vtab" data-scen="2" type="button" aria-pressed="false">Pessimistic</button>
       </div>
-      <div class="tabrow" role="tablist" aria-label="Scenario">
-        <button class="vtab on" data-scen="0" type="button">Base</button>
-        <button class="vtab" data-scen="1" type="button">Optimistic grid</button>
-        <button class="vtab" data-scen="2" type="button">Pessimistic grid</button>
+      <svg class="chart" id="exsvg" viewBox="0 0 720 340" xmlns="http://www.w3.org/2000/svg"
+           role="img" tabindex="0" aria-label="Line chart: emissions avoided per kilowatt-hour by five systems, 2025 to 2040."></svg>
+      <div class="cread" id="exread" role="status" aria-live="polite"></div>
+      <div class="clegend">
+        <span><span class="sw" style="border-top-color:#00D98B"></span>V2G — highest today</span>
+        <span><span class="sw" style="border-top-color:#ecebe6;border-top-style:dashed"></span>Managed charging — grows as off-peak cleans up</span>
+        <span><span class="sw" style="border-top-color:#6b6a64"></span>V2H · V2B · stationary BESS</span>
       </div>
-      <div class="exbars" id="exbars"></div>
       <span class="exnote" id="exnote"></span>
+      <details class="tview"><summary>Table view — all five systems by year</summary><div class="tscroll" id="extable"></div></details>
     </div>
   </div>
 
@@ -277,25 +409,22 @@
       <span class="viz__note">kg CO₂e/kWh · NREL Cambium · 2030 base interpolated</span>
     </div>
     <div class="viz__body">
-      <div class="tabrow" role="tablist" aria-label="Grid scenario">
-        <button class="vtab on" data-traj="base" type="button">Base</button>
-        <button class="vtab" data-traj="opt" type="button">Optimistic</button>
-        <button class="vtab" data-traj="pess" type="button">Pessimistic</button>
+      <div class="tabrow" role="group" aria-label="Grid scenario">
+        <span class="tabrow__label">Grid scenario</span>
+        <button class="vtab on" data-traj="base" type="button" aria-pressed="true">Base</button>
+        <button class="vtab" data-traj="opt" type="button" aria-pressed="false">Optimistic</button>
+        <button class="vtab" data-traj="pess" type="button" aria-pressed="false">Pessimistic</button>
       </div>
-      <svg class="traj" id="trajsvg" viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Line chart of peak and off-peak marginal grid carbon intensity declining from 2025 to 2040">
-        <line class="axis" x1="60" y1="20" x2="60" y2="250"/>
-        <line class="axis" x1="60" y1="250" x2="650" y2="250"/>
-        <text x="14" y="30">0.8</text><text x="14" y="140">0.4</text><text x="14" y="253">0.0</text>
-        <text x="80" y="272">2025</text><text x="255" y="272">2030</text><text x="430" y="272">2035</text><text x="605" y="272">2040</text>
-        <polyline class="gline gline--peak" id="lpeak" points=""/>
-        <polyline class="gline gline--off" id="loff" points=""/>
-        <g id="trajdots"></g>
-      </svg>
-      <div class="trajlegend">
-        <span><span class="sw" style="background:#00D98B"></span>PEAK HOURS — WHAT DISCHARGING DISPLACES</span>
-        <span><span class="sw" style="background:rgba(236,235,230,0.6)"></span>OFF-PEAK — WHAT CHARGING CONSUMES</span>
+      <svg class="chart" id="trajsvg" viewBox="0 0 720 330" xmlns="http://www.w3.org/2000/svg"
+           role="img" tabindex="0" aria-label="Line chart: marginal grid carbon intensity at peak and off-peak hours, 2025 to 2040."></svg>
+      <div class="cread" id="trajread" role="status" aria-live="polite"></div>
+      <div class="clegend">
+        <span><span class="sw" style="border-top-color:#00D98B"></span>Peak hours — what discharging displaces</span>
+        <span><span class="sw" style="border-top-color:#aeada4;border-top-style:dashed"></span>Off-peak — what charging consumes</span>
+        <span><span class="sw" style="border-top:14px solid rgba(255,198,93,0.35)"></span>Peak below off-peak</span>
       </div>
       <span class="exnote" id="trajnote"></span>
+      <details class="tview"><summary>Table view — peak, off-peak and the gap</summary><div class="tscroll" id="trajtable"></div></details>
     </div>
   </div>
 
@@ -318,7 +447,8 @@
         Secretary of State (2019–2025), projected forward with a logistic
         growth model. The working hypothesis: keeping peaker plants turned
         off delivers its biggest social impact in EIEC communities — the
-        places where high energy burden, peaker pollution, and a growing
+        Illinois designation for equity investment eligible communities,
+        where high energy burden, peaker pollution, and a growing
         dispatchable EV fleet overlap.</p>
       </div>
     </div>
@@ -332,38 +462,75 @@
     </div>
     <div class="viz__body">
       <div class="atctl">
-        <div class="tabrow" style="margin:0" role="tablist" aria-label="Adoption scenario">
-          <button class="vtab on" data-as="0" type="button">Base</button>
-          <button class="vtab" data-as="1" type="button">Optimistic</button>
-          <button class="vtab" data-as="2" type="button">Pessimistic</button>
+        <div class="tabrow" style="margin:0" role="group" aria-label="Adoption scenario">
+          <span class="tabrow__label">Adoption</span>
+          <button class="vtab on" data-as="0" type="button" aria-pressed="true">Base</button>
+          <button class="vtab" data-as="1" type="button" aria-pressed="false">Optimistic</button>
+          <button class="vtab" data-as="2" type="button" aria-pressed="false">Pessimistic</button>
         </div>
         <div class="atslider">
-          <input type="range" id="atyear" min="2025" max="2040" value="2030" step="1" aria-label="Projection year">
-          <output id="atyearout">2030</output>
+          <label class="tabrow__label" for="atyear">Year</label>
+          <input type="range" id="atyear" min="2025" max="2040" value="2030" step="1">
+          <output id="atyearout" for="atyear">2030</output>
         </div>
-        <button class="vtab on" id="athb" type="button">EIEC focus</button>
-        <button class="vtab on" id="atpk" type="button">Peakers</button>
+        <button class="vtab on" id="athb" type="button" aria-pressed="true">EIEC rings</button>
+        <button class="vtab on" id="atpk" type="button" aria-pressed="true">Peakers</button>
       </div>
+
       <div class="atwrap">
         <div>
-          <svg class="atmap" id="atmap" viewBox="0 0 760 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Map of ComEd territory in northern Illinois: zip codes drawn as circles sized by projected EV fleet and shaded by peaker-displacement social impact, with peaker plants marked as triangles"></svg>
-          <div class="atlegend">
-            <span>● ZIP — SIZE = PROJECTED EVs · BRIGHTNESS = SOCIAL-IMPACT SCORE</span>
-            <span style="color:#FFC65D">◯ TOP-QUARTILE ENERGY BURDEN (EIEC FOCUS)</span>
-            <span style="color:#ff5d5d">▲ PEAKER PLANT — SIZE = CO₂e</span>
+          <svg class="atmap" id="atmap" viewBox="0 0 880 690" xmlns="http://www.w3.org/2000/svg"
+               role="img" tabindex="0" aria-label="Map of ComEd territory, northern Illinois."></svg>
+          <p class="atcap">Northern Illinois · the 25 counties containing ComEd-territory zip codes. The dashed box is the area magnified below.</p>
+
+          <div class="atsub">
+            <div>
+              <svg class="atinset" id="atinset" viewBox="0 0 470 560" xmlns="http://www.w3.org/2000/svg"
+                   role="img" aria-label="Detail of the Chicago metropolitan area at roughly three times the scale of the territory map, showing the same zip codes spread apart. All values are in the table view below."></svg>
+              <p class="atcap">Chicago metro, ≈3× — where two-thirds of the zip codes sit</p>
+            </div>
+            <div class="atkeys">
+              <div class="key">
+                <h3>Circle size — projected EVs</h3>
+                <div id="lg-size"></div>
+                <p>One scale for every year and scenario, so growth is visible as the slider moves.</p>
+              </div>
+              <div class="key">
+                <h3>Circle colour — equity weight</h3>
+                <div class="lgramp" id="lg-ramp"></div>
+                <p>Vulnerability × peaker burden, in quintiles. Fixed over time — only the fleet grows.</p>
+              </div>
+              <div class="key">
+                <h3>Marks</h3>
+                <div class="keyrow"><svg width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="#FFC65D" stroke-width="1.4"/></svg> Top-quartile energy burden (EIEC)</div>
+                <div class="keyrow"><svg width="16" height="16" aria-hidden="true"><path d="M8,2 L14,13 L2,13 Z" fill="#ff5d5d"/></svg> Peaker plant — size by CO₂e</div>
+                <div class="keyrow"><svg width="16" height="16" aria-hidden="true"><path d="M8,3 L13,12 L3,12 Z" fill="none" stroke="#ff5d5d" stroke-width="1.6"/></svg> No reported CO₂e (biomass)</div>
+                <div class="keyrow"><svg width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="5.5" fill="none" stroke="#ecebe6" stroke-opacity="0.5" stroke-width="1.1" stroke-dasharray="3 2.5"/></svg> Zip codes with no mapped position, pooled at their county centre</div>
+              </div>
+            </div>
           </div>
         </div>
+
         <div>
           <div class="atstats">
-            <div><span class="n" id="at-ev">—</span><span class="l">PROJECTED EVs IN TERRITORY</span></div>
-            <div><span class="n" id="at-mwh">—</span><span class="l">DISPATCHABLE MWh PER PEAK EVENT*</span></div>
+            <div><span class="n" id="at-ev">—</span><span class="l">Projected EVs in territory</span></div>
+            <div><span class="n" id="at-mwh">—</span><span class="l">Dispatchable MWh per peak event*</span></div>
           </div>
-          <p class="mono" style="font-size: var(--fs-micro);letter-spacing:0.12em;color:var(--ink-dim);margin:0 0 0.5rem">HIGHEST SOCIAL-IMPACT ZIP CODES</p>
+          <p class="mono" style="font-size: var(--fs-micro);letter-spacing:0.12em;color:var(--ink-dim);margin:0 0 0.5rem">HIGHEST-DISPLACEMENT ZIP CODES</p>
           <ol class="atlist" id="atlist"></ol>
           <div class="athyp" id="athyp"></div>
         </div>
       </div>
-      <p class="exnote" style="margin-top:1.2rem">SOURCES: ILSOS EV REGISTRATIONS BY ZIP (2019–2025) · HUD ZIP–TRACT CROSSWALK · DOE LEAD ENERGY BURDEN · COMED-TERRITORY PEAKER DATASET (21 PLANTS) · AFDC STATIONS FOR ZIP CENTROIDS. *ASSUMES 10 kWh DISPATCHED PER PARTICIPATING EV; PARTICIPATION 10% / 20% / 5% BY SCENARIO. ZIPS WITHOUT STATION-DERIVED CENTROIDS ARE PLACED NEAR THEIR COUNTY CENTER.</p>
+
+      <div class="atreadout" id="atreadout" role="status" aria-live="polite">Focus the map and use the arrow keys, or hover a mark, to read its values here.</div>
+
+      <details class="tview"><summary>Table view — all zip codes, ranked</summary><div class="tscroll" id="attable"></div></details>
+      <details class="tview"><summary>Table view — the 21 peaker plants</summary><div class="tscroll" id="atpktable"></div></details>
+
+      <span class="srcnote">SOURCES: ILSOS EV REGISTRATIONS BY ZIP (2019–2025) · HUD ZIP–TRACT CROSSWALK · DOE LEAD ENERGY BURDEN · COMED-TERRITORY PEAKER DATASET (21 PLANTS) · AFDC STATIONS FOR ZIP CENTROIDS · US CENSUS COUNTY BOUNDARIES.
+      *ASSUMES 10 kWh DISPATCHED PER PARTICIPATING EV; PARTICIPATION 10% / 20% / 5% BY SCENARIO.
+      COUNTY OUTLINES SHOW THE 25 COUNTIES CONTAINING TERRITORY ZIP CODES, NOT THE SERVICE BOUNDARY ITSELF, WHICH IS PARTIAL IN SEVERAL OF THEM.
+      133 OF 371 ZIP CODES HAVE NO STATION-DERIVED CENTROID. RATHER THAN PLOT THEM SOMEWHERE PLAUSIBLE, THEY ARE POOLED INTO ONE HOLLOW MARK PER COUNTY AND MARKED "ESTIMATED" IN THE TABLE; THEIR VALUES STILL COUNT TOWARD EVERY TOTAL AND RANKING.</span>
     </div>
   </div>
 
@@ -414,147 +581,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script src="js/main.js"></script>
 <script src="js/atlas.js"></script>
-<script>
-(function () {
-  /* ---------- emissions explorer (values from the midpoint memo, kg CO2e avoided per FU) ---------- */
-  var YEARS = [2025, 2030, 2035, 2040];
-  var DATA = {
-    v2g:  { name: 'V2G',  s: [[0.1983,0.1636,0.1232,0.0911],[0.1345,0.0631,0.0401,0.0249],[0.2514,0.1950,0.1610,0.1466]] },
-    v2h:  { name: 'V2H',  s: [[0.1678,0.1293,0.0883,0.0573],[0.1065,0.0381,0.0163,0.0076],[0.2030,0.1554,0.1190,0.1009]] },
-    v2b:  { name: 'V2B',  s: [[0.1228,0.0886,0.0560,0.0344],[0.0536,0.0089,0.0039,0.0051],[0.1764,0.1360,0.0910,0.0766]] },
-    bess: { name: 'BESS', s: [[0.0898,0.0583,0.0305,0.0125],[0.0089,0.0031,0.0019,0.0028],[0.1504,0.1054,0.0628,0.0560]] },
-    mc:   { name: 'Managed charging', s: [[0.0221,0.0507,0.1003,0.1100],[0.0203,-0.0080,0.0945,0.1122],[0.0246,0.0676,0.0696,0.0924]] }
-  };
-  var NOTES = {
-    v2g: 'V2G AVOIDS THE MOST CARBON TODAY; THE BENEFIT SHRINKS AS THE GRID DECARBONIZES.',
-    v2h: 'V2H IS VALUED PRIMARILY FOR RESILIENCE — THE EMISSIONS BENEFIT IS A BONUS THAT FADES BY 2040.',
-    v2b: 'V2B FOLLOWS THE SAME PATTERN AT BUILDING SCALE.',
-    bess: 'STATIONARY BATTERIES SHOW THE SMALLEST PER-kWh BENEFIT OF THE DISCHARGING SYSTEMS.',
-    mc: 'THE OUTLIER: MANAGED CHARGING’S BENEFIT GROWS AS OFF-PEAK HOURS GET CLEANER. RED 2030 BAR = EMISSIONS ADDED IF TOU SHIFTS LOAD INTO DIRTIER HOURS.'
-  };
-  var sys = 'v2g', scen = 0, MAX = 0.26;
-  var exbars = document.getElementById('exbars'), exnote = document.getElementById('exnote');
-  function exRender() {
-    var vals = DATA[sys].s[scen];
-    exbars.innerHTML = vals.map(function (v, i) {
-      var neg = v < 0, w = Math.min(100, Math.abs(v) / MAX * 100);
-      return '<div class="exbar"><span class="exbar__year">' + YEARS[i] + '</span>' +
-        '<div class="exbar__track"><div class="exbar__fill' + (neg ? ' neg' : '') + '" style="width:' + w + '%"></div></div>' +
-        '<span class="exbar__val' + (neg ? ' neg' : '') + '">' + (neg ? '+' : '−') + Math.abs(v).toFixed(4) + ' kg</span></div>';
-    }).join('');
-    exnote.textContent = NOTES[sys];
-    document.querySelectorAll('[data-sys]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-sys') === sys); });
-    document.querySelectorAll('[data-scen]').forEach(function (b) { b.classList.toggle('on', +b.getAttribute('data-scen') === scen); });
-  }
-  document.querySelectorAll('[data-sys]').forEach(function (b) { b.addEventListener('click', function () { sys = b.getAttribute('data-sys'); exRender(); }); });
-  document.querySelectorAll('[data-scen]').forEach(function (b) { b.addEventListener('click', function () { scen = +b.getAttribute('data-scen'); exRender(); }); });
-  exRender();
-
-  /* ---------- grid trajectory ---------- */
-  var TRAJ = {
-    base: { off: [0.76, 0.66, 0.39, 0.37], peak: [0.78, 0.72, 0.49, 0.48], note: 'BASE CASE: THE PEAK/OFF-PEAK GAP PERSISTS — GAS PEAKERS STILL SET PEAK EMISSIONS THROUGH 2040.' },
-    opt:  { off: [0.76, 0.69, 0.31, 0.26], peak: [0.78, 0.68, 0.41, 0.37], note: 'OPTIMISTIC: BY 2030, PEAK BRIEFLY DIPS BELOW OFF-PEAK IN SOME HOURS — THE TOU CALIBRATION RISK.' },
-    pess: { off: [0.76, 0.63, 0.43, 0.41], peak: [0.78, 0.70, 0.50, 0.50], note: 'PESSIMISTIC: SLOWER DECARBONIZATION KEEPS MARGINAL EMISSIONS — AND V2X’S RELATIVE BENEFIT — HIGH.' }
-  };
-  var XS = [85, 260, 435, 610], Y0 = 250, YMAX = 0.85, H = 230;
-  function y(v) { return Y0 - (v / YMAX) * H; }
-  var lpeak = document.getElementById('lpeak'), loff = document.getElementById('loff'),
-      dots = document.getElementById('trajdots'), trajnote = document.getElementById('trajnote');
-  function trajRender(key) {
-    var d = TRAJ[key];
-    lpeak.setAttribute('points', d.peak.map(function (v, i) { return XS[i] + ',' + y(v); }).join(' '));
-    loff.setAttribute('points', d.off.map(function (v, i) { return XS[i] + ',' + y(v); }).join(' '));
-    dots.innerHTML = d.peak.map(function (v, i) {
-      return '<circle class="dot dot--peak" cx="' + XS[i] + '" cy="' + y(v) + '" r="4"/>';
-    }).join('') + d.off.map(function (v, i) {
-      return '<circle class="dot dot--off" cx="' + XS[i] + '" cy="' + y(v) + '" r="4"/>';
-    }).join('');
-    trajnote.textContent = d.note;
-    document.querySelectorAll('[data-traj]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-traj') === key); });
-  }
-  document.querySelectorAll('[data-traj]').forEach(function (b) { b.addEventListener('click', function () { trajRender(b.getAttribute('data-traj')); }); });
-  trajRender('base');
-
-  /* ---------- peaker displacement atlas ---------- */
-  (function () {
-    if (typeof window.ATLAS === 'undefined') return;
-    var A = window.ATLAS;
-    var RMULT = [1.0, 1.3, 0.55], PART = [0.10, 0.20, 0.05];
-    var scen = 0, year = 2030, showHB = true, showPK = true;
-    var LON0 = -90.45, LON1 = -87.35, LAT0 = 42.70, LAT1 = 40.90;
-    function px(lo) { return 20 + (lo - LON0) / (LON1 - LON0) * 720; }
-    function py(la) { return 16 + (LAT0 - la) / (LAT0 - LAT1) * 560; }
-    function fleet(e, K, r, t) { var Aa = K / Math.max(e, 1) - 1; return K / (1 + Aa * Math.exp(-r * RMULT[scen] * t)); }
-    function cfn(t) {
-      var mx = 0, m = {};
-      for (var c in A.counties) { var x = A.counties[c]; m[c] = fleet(x.e, x.K, x.r, t); if (m[c] > mx) mx = m[c]; }
-      for (c in m) m[c] /= mx;
-      return m;
-    }
-    var svg = document.getElementById('atmap'),
-        list = document.getElementById('atlist'),
-        hyp = document.getElementById('athyp');
-    var landmarks = [['CHICAGO', 41.88, -87.63], ['ROCKFORD', 42.27, -89.09], ['AURORA', 41.76, -88.32], ['JOLIET', 41.53, -88.08], ['WAUKEGAN', 42.36, -87.84]];
-    function render() {
-      var t = year - 2025, cf = cfn(t);
-      var rows = A.zips.map(function (z) {
-        var f = fleet(z.e, z.K, z.r, t);
-        var s = z.v * (0.25 + 0.75 * z.pb) * (cf[z.y] || 0.1);
-        return { z: z, f: f, s: s };
-      });
-      var smax = 0, ftot = 0;
-      rows.forEach(function (r) { if (r.s > smax) smax = r.s; ftot += r.f; });
-      /* map */
-      var out = '<path class="shore" d="M' + px(-87.80) + ',' + py(42.66) + ' L' + px(-87.82) + ',' + py(42.30) + ' L' + px(-87.60) + ',' + py(41.88) + ' L' + px(-87.52) + ',' + py(41.62) + '"/>';
-      landmarks.forEach(function (l) { out += '<text x="' + (px(l[2]) + 7) + '" y="' + (py(l[1]) - 6) + '">' + l[0] + '</text>'; });
-      rows.forEach(function (r) {
-        var rad = 1.6 + Math.sqrt(r.f) / 14;
-        if (rad > 14) rad = 14;
-        var op = 0.12 + 0.88 * (smax ? r.s / smax : 0);
-        out += '<circle class="zipdot' + (showHB && r.z.hb ? ' hbring' : '') + '" cx="' + px(r.z.lo).toFixed(1) + '" cy="' + py(r.z.la).toFixed(1) + '" r="' + rad.toFixed(1) + '" fill="rgba(0,217,139,' + op.toFixed(2) + ')"><title>' + r.z.z + ' — ' + r.z.c + ' (' + r.z.y + ')\nProjected EVs ' + year + ': ' + Math.round(r.f) + '\nEnergy burden: ' + r.z.eb + '% · impact score: ' + (smax ? (r.s / smax * 100).toFixed(0) : 0) + '/100' + (r.z.ap ? '\n(county-anchored position)' : '') + '</title></circle>';
-      });
-      if (showPK) A.peakers.forEach(function (p) {
-        var sz = 5 + Math.sqrt(p.co2) / 130;
-        if (sz > 16) sz = 16;
-        var x = px(p.lo), y = py(p.la);
-        out += '<path class="pkmark" d="M' + x + ',' + (y - sz) + ' L' + (x + sz * 0.9) + ',' + (y + sz * 0.7) + ' L' + (x - sz * 0.9) + ',' + (y + sz * 0.7) + ' Z"><title>' + p.n + ' (' + p.fuel + ', ' + p.mw + ' MW)\nCO₂e: ' + p.co2.toLocaleString() + ' · POC+LI avg: ' + p.ej + '%</title></path>';
-      });
-      svg.innerHTML = out;
-      /* side panel */
-      document.getElementById('at-ev').textContent = Math.round(ftot).toLocaleString();
-      document.getElementById('at-mwh').textContent = Math.round(ftot * PART[scen] * 10 / 1000).toLocaleString();
-      var top = rows.slice().sort(function (a, b) { return b.s - a.s; });
-      list.innerHTML = top.slice(0, 10).map(function (r) {
-        return '<li><span class="who">' + r.z.z + ' · ' + r.z.c + '<small>' + r.z.y + ' CO · EB ' + r.z.eb + '% · ' + Math.round(r.f) + ' EVs</small></span><span class="bar"><i style="width:' + (r.s / smax * 100).toFixed(0) + '%"></i></span></li>';
-      }).join('');
-      var hb20 = top.slice(0, 20).filter(function (r) { return r.z.hb; }).length;
-      hyp.textContent = hb20 + ' OF THE TOP 20 HIGHEST-IMPACT ZIPS ARE TOP-QUARTILE ENERGY-BURDEN COMMUNITIES — THE SOCIAL BENEFIT OF KEEPING PEAKERS OFF CONCENTRATES WHERE THE BURDEN ALREADY LIVES.';
-    }
-    document.querySelectorAll('[data-as]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        scen = +b.getAttribute('data-as');
-        document.querySelectorAll('[data-as]').forEach(function (x) { x.classList.toggle('on', x === b); });
-        render();
-      });
-    });
-    var yr = document.getElementById('atyear');
-    yr.addEventListener('input', function () { year = +yr.value; document.getElementById('atyearout').textContent = year; render(); });
-    document.getElementById('athb').addEventListener('click', function () { showHB = !showHB; this.classList.toggle('on', showHB); render(); });
-    document.getElementById('atpk').addEventListener('click', function () { showPK = !showPK; this.classList.toggle('on', showPK); render(); });
-    render();
-  })();
-
-  /* ---------- reveals ---------- */
-  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!reduced && typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
-    document.querySelectorAll('.viz, .sgrid__cell, .flow__step').forEach(function (el) {
-      gsap.from(el, {
-        opacity: 0, y: 24, duration: 0.7, ease: 'power3.out',
-        scrollTrigger: { trigger: el, start: 'top 92%' }
-      });
-    });
-  }
-})();
-</script>
+<script src="js/il-geo.js"></script>
+<script src="js/comed-charts.js"></script>
 </body>
 </html>
