@@ -12,3 +12,8 @@ tools/.cache/
 # reads it to regenerate TRAJ; the numbers themselves are baked into comed-charts.js,
 # so the site never needs the file.
 data/
+
+# Working copy docs. These are internal editorial notes — they critique the case
+# studies they sit next to, and this repo is public. Removed from history 2026-08-13
+# after copy/comed-v2x.md had been readable on GitHub since ab872a0.
+copy/
