@@ -281,10 +281,18 @@
 
   /* ============================================================ 2. trajectory */
 
+  /* Computed by tools/cambium-srmer.py from the NREL Cambium 2024 Illinois extract,
+     not transcribed: load-weighted SRMER for PJM_West (ComEd's balancing area),
+     peak = hours 15-20, per Appendix B of the midpoint memo. Base 2030 used to be
+     interpolated between 2025 and 2035 because the memo states eleven of these
+     twelve cells in prose and never states that one — it was missing from the memo,
+     not from the data, and the interpolation had it 0.06 too high in both bands.
+     Every other cell agrees with the memo to within 0.010; the residual is the
+     weekday half of the peak filter, which a 24-hour diurnal extract cannot apply. */
   var TRAJ = {
-    base: { off: [0.76, 0.66, 0.39, 0.37], peak: [0.78, 0.72, 0.49, 0.48], note: 'BASE CASE: THE PEAK / OFF-PEAK GAP HOLDS — GAS PEAKERS STILL SET PEAK EMISSIONS THROUGH 2040.' },
-    opt: { off: [0.76, 0.69, 0.31, 0.26], peak: [0.78, 0.68, 0.41, 0.37], note: 'OPTIMISTIC: AROUND 2030 PEAK FALLS BELOW OFF-PEAK. A TIME-OF-USE PROGRAM CALIBRATED FOR TODAY WOULD SHIFT LOAD INTO DIRTIER HOURS.' },
-    pess: { off: [0.76, 0.63, 0.43, 0.41], peak: [0.78, 0.70, 0.50, 0.50], note: 'PESSIMISTIC: SLOWER DECARBONISATION KEEPS MARGINAL EMISSIONS — AND V2X’S RELATIVE BENEFIT — HIGH.' }
+    base: { off: [0.757, 0.596, 0.384, 0.361], peak: [0.786, 0.663, 0.494, 0.483], note: 'BASE CASE: THE PEAK / OFF-PEAK GAP HOLDS — GAS PEAKERS STILL SET PEAK EMISSIONS THROUGH 2040.' },
+    opt: { off: [0.754, 0.690, 0.300, 0.250], peak: [0.789, 0.681, 0.408, 0.360], note: 'OPTIMISTIC: AROUND 2030 PEAK FALLS BELOW OFF-PEAK. A TIME-OF-USE PROGRAM CALIBRATED FOR TODAY WOULD SHIFT LOAD INTO DIRTIER HOURS.' },
+    pess: { off: [0.756, 0.624, 0.421, 0.402], peak: [0.788, 0.708, 0.493, 0.495], note: 'PESSIMISTIC: SLOWER DECARBONISATION KEEPS MARGINAL EMISSIONS — AND V2X’S RELATIVE BENEFIT — HIGH.' }
   };
 
   function initTraj() {

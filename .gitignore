@@ -6,3 +6,9 @@ node_modules/
 # verification harness and the cached county GeoJSON — neither ships
 _check/
 tools/.cache/
+
+# NREL Cambium extract behind the grid-intensity chart. Public data, but 1.7 MB of
+# it, and this repo is public and doubles as the deploy payload. tools/cambium-srmer.py
+# reads it to regenerate TRAJ; the numbers themselves are baked into comed-charts.js,
+# so the site never needs the file.
+data/
