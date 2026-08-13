@@ -119,17 +119,25 @@
     { k: 'v2g', name: 'V2G', emph: 1, cls: 'a' },
     { k: 'mc', name: 'Managed charging', emph: 1, cls: 'b' },
     { k: 'v2h', name: 'V2H', emph: 0, cls: 'q' },
-    { k: 'v2b', name: 'V2B', emph: 0, cls: 'q' },
+    /* V2B carries the memo's V2H values in all twelve cells — the study produced one
+       result for both. Kept in the data table, not drawn: a second identical polyline
+       would imply two independent findings. */
+    { k: 'v2b', name: 'V2B', emph: 0, cls: 'q', merged: 1 },
     { k: 'bess', name: 'Stationary BESS', emph: 0, cls: 'q' }
   ];
+  /* Appendix A of the midpoint technical memo, sign-flipped into this chart's
+     avoided-emissions convention (the memo writes avoided as negative; the y-axis
+     here reads "avoided per kWh", so avoided is positive). Rows [base, optimistic,
+     pessimistic], columns [2025, 2030, 2035, 2040]. */
   var EM = {
-    v2g: [[0.1983, 0.1636, 0.1232, 0.0911], [0.1345, 0.0631, 0.0401, 0.0249], [0.2514, 0.1950, 0.1610, 0.1466]],
-    v2h: [[0.1678, 0.1293, 0.0883, 0.0573], [0.1065, 0.0381, 0.0163, 0.0076], [0.2030, 0.1554, 0.1190, 0.1009]],
-    v2b: [[0.1228, 0.0886, 0.0560, 0.0344], [0.0536, 0.0089, 0.0039, 0.0051], [0.1764, 0.1360, 0.0910, 0.0766]],
-    bess: [[0.0898, 0.0583, 0.0305, 0.0125], [0.0089, 0.0031, 0.0019, 0.0028], [0.1504, 0.1054, 0.0628, 0.0560]],
-    mc: [[0.0221, 0.0507, 0.1003, 0.1100], [0.0203, -0.0080, 0.0945, 0.1122], [0.0246, 0.0676, 0.0696, 0.0924]]
+    v2g:  [[0.1061, 0.0537, -0.0275, -0.0401], [0.0894, 0.1066, -0.0438, -0.0678], [0.1534, 0.0845, 0.0349, 0.0095]],
+    v2h:  [[0.0624, 0.0165, -0.0564, -0.0686], [0.0458, 0.0680, -0.0675, -0.0897], [0.1096, 0.0444, 0.0058, -0.0201]],
+    v2b:  [[0.0624, 0.0165, -0.0564, -0.0686], [0.0458, 0.0680, -0.0675, -0.0897], [0.1096, 0.0444, 0.0058, -0.0201]],
+    bess: [[0.0814, 0.0341, -0.0403, -0.0521], [0.0560, 0.0764, -0.0574, -0.0792], [0.1079, 0.0463, 0.0093, -0.0149]],
+    mc:   [[0.0221, 0.0507,  0.1003,  0.1100], [0.0203, -0.0080, 0.0945,  0.1122], [0.0246, 0.0676, 0.0696, 0.0924]]
   };
-  var SCEN = ['Base', 'Optimistic grid', 'Pessimistic grid'];
+  /* bare names — every consumer supplies its own "grid"/"scenario" suffix */
+  var SCEN = ['Base', 'Optimistic', 'Pessimistic'];
 
   /** Linear interpolation crossing point between two series, in fractional years. */
   function crossover(a, b) {
@@ -147,7 +155,8 @@
     var svg = byId('exsvg');
     if (!svg) return;
     var W = 720, H = 340, L = 62, R = 132, T = 22, B = 46;
-    var y0 = -0.03, y1 = 0.27;
+    /* corrected data spans -0.0897 to 0.1534 — four of the five series go negative */
+    var y0 = -0.12, y1 = 0.18;
     var px = function (yr) { return L + (yr - 2025) / 15 * (W - L - R); };
     var py = function (v) { return T + (y1 - v) / (y1 - y0) * (H - T - B); };
     var scen = 0;
@@ -156,7 +165,7 @@
     function render() {
       var g = '';
       /* gridlines — solid hairlines, one shade off the surface */
-      var ticks = [0.00, 0.05, 0.10, 0.15, 0.20, 0.25];
+      var ticks = [-0.10, -0.05, 0.00, 0.05, 0.10, 0.15];
       ticks.forEach(function (t) {
         g += '<line class="grid" x1="' + L + '" y1="' + py(t).toFixed(1) + '" x2="' + (W - R) + '" y2="' + py(t).toFixed(1) + '"/>';
         g += '<text class="ctick" x="' + (L - 10) + '" y="' + py(t).toFixed(1) + '" text-anchor="end" dominant-baseline="middle">' + t.toFixed(2) + '</text>';
@@ -171,6 +180,7 @@
 
       /* de-emphasised series first, so the two that carry the story sit on top */
       SYS.slice().sort(function (a, b) { return a.emph - b.emph; }).forEach(function (s) {
+        if (s.merged) return;
         var v = EM[s.k][scen];
         var pts = v.map(function (val, i) { return px(YEARS[i]).toFixed(1) + ',' + py(val).toFixed(1); }).join(' ');
         g += '<polyline class="ln ln--' + s.cls + '" points="' + pts + '"/>';
